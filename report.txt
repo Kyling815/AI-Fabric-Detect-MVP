@@ -1,0 +1,346 @@
+AI Fabric Defect Detection MVP - Work Report
+Date: 2026-06-15
+
+Summary
+This project is now a working backend MVP for fabric defect inspection. The system can discover configured datasets, validate uploaded images, preprocess them, split them into patches, extract CNN features, project embeddings through a trained projection head, compare patches against normal reference libraries with FAISS, score anomalies, merge suspicious patches into defect boxes, classify the final result, save annotated output images, and store inspection history.
+
+The project has moved from a single DME-only reference into an early multi-fabric reference-library system. The current reliable runtime default is the extended DME reference:
+
+FABRIC_DEFAULT_REFERENCE_ID=dme_plain_extended_v1_100
+
+Backend and API Work
+- Created the FastAPI backend skeleton and application structure.
+- Added upload handling for POST /api/inspect.
+- Added optional reference selection on inspection with multipart field:
+  reference_id=<reference_id>
+- Added image readability validation through Pillow.
+- Added image metadata extraction: width, height, mode, content type, file size.
+- Added preprocessing plan output in API responses.
+- Added patch-grid metadata output.
+- Added CNN embedding summary output.
+- Added anomaly summary output.
+- Added final result, confidence, defect area ratio, defect count, and boxes.
+- Added upload storage and annotated image storage.
+- Added database persistence for inspection history and detected defect boxes.
+- Added reference registry support.
+- Added reference-list and reference-status API support.
+
+Current Runtime Configuration
+Current .env configuration:
+
+FABRIC_DEFAULT_REFERENCE_ID=dme_plain_extended_v1_100
+FABRIC_MODEL_NAME=resnet18
+FABRIC_USE_PRETRAINED_WEIGHTS=true
+FABRIC_USE_PROJECTION_HEAD=true
+FABRIC_PROJECTION_HEAD_PATH=storage/models/projection_head_extended_v1.pt
+FABRIC_PROJECTION_DIM=128
+FABRIC_DEVICE=auto
+FABRIC_IMAGE_MAX_SIZE=768
+FABRIC_MODEL_INPUT_SIZE=224
+FABRIC_PATCH_SIZE=96
+FABRIC_PATCH_STRIDE=48
+FABRIC_BATCH_SIZE=16
+FABRIC_ANOMALY_THRESHOLD=0.075
+FABRIC_GOOD_AREA_THRESHOLD=0.02
+FABRIC_BAD_AREA_THRESHOLD=0.10
+FABRIC_MIN_DEFECT_CLUSTER_PATCHES=6
+
+Preprocessing Behavior
+- Uploaded images are converted to RGB.
+- The image keeps its aspect ratio.
+- If the longest side is greater than 768 pixels, it is resized so the longest side becomes 768 pixels.
+- If the image is already 768 pixels or smaller on its longest side, it keeps its original size.
+- The resized image is split into 96 x 96 pixel patches.
+- Patches are sampled with a stride of 48 pixels.
+- Each patch is fed to ResNet18 at 224 x 224 pixels.
+
+Example:
+Original image: 1920 x 1080
+Preprocessed image: 768 x 432
+Patch size: 96 x 96
+CNN input per patch: 224 x 224
+
+Dataset and Storage Layout
+Raw datasets are kept under:
+
+Data/raw/
+
+Current raw dataset locations:
+
+Data/raw/external/20250129_Fabric_defects/Dataset
+Data/raw/external/WFDD
+Data/raw/external/Lusitano
+
+Optional curated processed-image inputs are reserved under:
+
+Data/processed/reference_ready/
+
+Generated AI artifacts are stored under:
+
+storage/indexes/
+storage/metadata/
+storage/models/
+storage/uploads/
+storage/annotated/
+
+Important distinction:
+- Data/raw contains original source datasets.
+- Data/processed is reserved for optional curated or normalized image datasets.
+- storage contains generated system artifacts, not source datasets.
+
+Computer Vision Pipeline
+- Implemented patch extraction with configurable patch size and stride.
+- Implemented ResNet18 feature extraction.
+- Added CUDA/CPU fallback with FABRIC_DEVICE=auto.
+- Added support for pretrained torchvision weights.
+- Added optional projection-head embedding support.
+- Added FAISS index build, load, and nearest-neighbor search.
+- Uses cosine-style nearest-neighbor scoring for patch anomaly detection.
+- Merges suspicious patches into defect boxes.
+- Filters merged boxes by minimum cluster size.
+- Generates annotated images with detected boxes.
+
+Projection-Head Training
+DME-only projection head:
+
+Checkpoint:
+storage/models/projection_head_dme.pt
+
+Training command:
+python scripts/train_projection_head.py --split-manifest storage/metadata/latest_dme_split.json --epochs 20 --output storage/models/projection_head_dme.pt
+
+Final DME training result:
+train_loss: 0.0231
+val_loss: 0.0223
+val_accuracy: 0.9968
+
+Extended multi-dataset projection head:
+
+Checkpoint:
+storage/models/projection_head_extended_v1.pt
+
+Training report:
+storage/metadata/training_reports/projection_head_extended_v1_report.json
+
+Training command:
+python scripts/train_extended_projection_head.py --manifest-csv storage/metadata/extended_dataset_manifests/extended_all.csv --epochs 20 --batch-size 16 --output storage/models/projection_head_extended_v1.pt --report-output storage/metadata/training_reports/projection_head_extended_v1_report.json
+
+Final extended training result:
+epoch: 20
+train_loss: 0.1836
+val_loss: 0.2527
+val_accuracy: 0.9140
+
+Best observed extended validation result:
+epoch: 17
+val_loss: 0.2458
+val_accuracy: 0.9191
+
+DME Reference and Evaluation History
+Original DME reference:
+
+reference_id: dme_plain_v1
+reference_version: resnet18_dme_20250129_split_seed42_20260612_020605
+embedding_dim: 128
+normal_image_count: 12
+patch_count: 1440
+
+Artifacts:
+storage/indexes/resnet18_dme_20250129_split_seed42_20260612_020605_embeddings.npy
+storage/indexes/resnet18_dme_20250129_split_seed42_20260612_020605_faiss.index
+storage/metadata/resnet18_dme_20250129_split_seed42_20260612_020605_metadata.json
+
+Best DME-only tuned evaluation:
+threshold: 0.075
+tp: 80
+fp: 3
+tn: 2
+fn: 0
+accuracy: 0.9647
+precision: 0.9639
+recall: 1.0
+f1: 0.9816
+
+This result prioritized zero missed defects while reducing false positives.
+
+Extended Dataset Preparation
+Added extended dataset preparation script:
+
+scripts/prepare_extended_datasets.py
+
+Generated manifests under:
+
+storage/metadata/extended_dataset_manifests/
+
+Prepared dataset counts:
+dme: 97
+wfdd: 4101
+lusitano: 6000
+extended_all: 10198
+reference_candidates: 9877
+eval_candidates: 6541
+
+Extended Reference Registry
+Added multi-reference registry:
+
+storage/metadata/reference_registry.json
+
+The registry tracks:
+- reference_id
+- reference_version
+- dataset_name
+- fabric_type
+- normal_path
+- metadata_path
+- embeddings_path
+- faiss_index_path
+- embedding_dim
+- patch_count
+- processed_image_count
+- thresholds
+
+Current reliable references:
+
+reference_id: dme_plain_extended_v1_100
+dataset: dme_20250129
+normal images: 17
+patch_count: 2040
+threshold: 0.03
+
+reference_id: wfdd_grid_cloth_extended_v1_100
+dataset: wfdd
+fabric_type: grid_cloth
+normal images: 100
+patch_count: 10000
+threshold: 0.03
+
+reference_id: wfdd_yellow_cloth_extended_v1_100
+dataset: wfdd
+fabric_type: yellow_cloth
+normal images: 100
+patch_count: 10000
+threshold: 0.03
+
+Current experimental or unreliable references:
+
+reference_id: wfdd_grey_cloth_extended_v1_100
+status: not reliable enough yet because false positives remain high.
+
+reference_id: wfdd_pink_flower_extended_v1_100
+status: not reliable enough yet because good flower images still score as defective.
+
+reference_id: lusitano_group_auto_extended_v1_100
+status: not production-ready because the available evaluation appears normal-only or insufficient for defect validation.
+
+Extended Evaluation Results
+Latest trusted extended evaluation used:
+
+python scripts/evaluate_extended_pipeline.py --reference-id dme_plain_extended_v1_100 --reference-id wfdd_grid_cloth_extended_v1_100 --reference-id wfdd_yellow_cloth_extended_v1_100 --max-images-per-group 80 --thresholds "0.03,0.05,0.075,0.10,0.12,0.15,0.20,0.30" --update-reference-thresholds
+
+Results:
+
+dme_plain_extended_v1_100
+threshold: 0.03
+total: 80
+tp: 63
+fp: 0
+tn: 17
+fn: 0
+accuracy: 1.0
+precision: 1.0
+recall: 1.0
+f1: 1.0
+
+wfdd_grid_cloth_extended_v1_100
+threshold: 0.03
+total: 80
+tp: 40
+fp: 0
+tn: 40
+fn: 0
+accuracy: 1.0
+precision: 1.0
+recall: 1.0
+f1: 1.0
+
+wfdd_yellow_cloth_extended_v1_100
+threshold: 0.03
+total: 80
+tp: 39
+fp: 0
+tn: 40
+fn: 1
+accuracy: 0.9875
+precision: 1.0
+recall: 0.975
+f1: 0.9873
+
+Extended evaluation outputs:
+
+storage/metadata/evaluation_results/extended_evaluation_summary.json
+storage/metadata/evaluation_results/extended_evaluation_summary.csv
+storage/metadata/evaluation_results/extended_evaluation_report.md
+
+Runtime Classification Update
+The runtime classifier was adjusted so the area thresholds behave as intended:
+
+- If defect area ratio is below FABRIC_GOOD_AREA_THRESHOLD, classify as Good.
+- If defect area ratio is at or above FABRIC_BAD_AREA_THRESHOLD, classify as Bad.
+- If defect area ratio is between the two thresholds, classify as Acceptable.
+
+This preserves the intended Acceptable band. The classifier no longer forces Bad purely because many small boxes were detected.
+
+Current classification thresholds:
+
+Good threshold: 0.02
+Bad threshold: 0.10
+
+Current interpretation:
+
+defect_area_ratio < 0.02 -> Good
+0.02 <= defect_area_ratio < 0.10 -> Acceptable
+defect_area_ratio >= 0.10 -> Bad
+
+Known Issues and Important Findings
+- Fabric style matters. A reference library built from one fabric style will often treat a visually different fabric style as anomalous.
+- Good DME/plain images should use dme_plain_extended_v1_100.
+- Good WFDD grid images should use wfdd_grid_cloth_extended_v1_100.
+- Good WFDD yellow images should use wfdd_yellow_cloth_extended_v1_100.
+- Good WFDD pink flower images are not reliable yet with wfdd_pink_flower_extended_v1_100.
+- Grey cloth and pink flower need more work before they should be trusted.
+- The registry field active_reference_version may still point at the last built reference, but runtime selection is controlled by FABRIC_DEFAULT_REFERENCE_ID or by the explicit reference_id submitted to /api/inspect.
+- If .env changes do not appear to take effect, fully stop and restart the Uvicorn process.
+
+Testing and Validation Commands
+Run the classifier tests:
+
+python -m pytest tests/test_classifier.py
+
+Run the full test suite:
+
+python -m pytest tests
+
+Start the backend on a safer non-default port:
+
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8010
+
+Inspect with an explicit reference id:
+
+curl.exe -X POST "http://127.0.0.1:8010/api/inspect" -F "file=@<IMAGE_PATH>" -F "reference_id=dme_plain_extended_v1_100"
+
+For WFDD grid:
+
+curl.exe -X POST "http://127.0.0.1:8010/api/inspect" -F "file=@<IMAGE_PATH>" -F "reference_id=wfdd_grid_cloth_extended_v1_100"
+
+For WFDD yellow:
+
+curl.exe -X POST "http://127.0.0.1:8010/api/inspect" -F "file=@<IMAGE_PATH>" -F "reference_id=wfdd_yellow_cloth_extended_v1_100"
+
+Recommended Next Phase
+- Keep DME plain, WFDD grid, and WFDD yellow as the currently trusted references.
+- Do not promote WFDD grey, WFDD pink flower, or Lusitano references yet.
+- Add a frontend reference selector so the user can choose the correct fabric reference during upload.
+- Add warnings in the UI when a selected reference is marked experimental.
+- Improve pink flower and grey cloth references with better preprocessing, stronger grouping, or a more specialized model.
+- Continue collecting per-fabric false positives and false negatives.
+- Consider per-fabric threshold presets and per-fabric visual normalization.
