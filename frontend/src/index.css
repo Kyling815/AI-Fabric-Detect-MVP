@@ -1,0 +1,73 @@
+:root {
+  /* Industrial Palette */
+  --bg-dark: #0a0b0c;
+  --bg-panel: #121417;
+  --bg-element: #1a1d21;
+  
+  --border-dim: #2a2d32;
+  --border-bright: #3a3f47;
+  
+  --text-main: #d1d5db;
+  --text-dim: #6b7280;
+  --text-bright: #ffffff;
+  
+  --accent-cyan: #00f5ff;
+  --accent-orange: #ff6b00;
+  --accent-green: #00ff9d;
+  --accent-red: #ff3e3e;
+
+  --font-mono: 'JetBrains Mono', 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  color-scheme: dark;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-dark);
+  background-image: 
+    linear-gradient(rgba(42, 45, 50, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42, 45, 50, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-bright);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}

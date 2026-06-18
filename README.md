@@ -28,6 +28,8 @@ The backend now includes the full local MVP inspection flow.
 
 ## Planned Local Development
 
+### Backend
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -39,6 +41,22 @@ API docs will be available at:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+### Frontend
+
+The frontend is a Vite-based React application.
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:5173
 ```
 
 Environment variables use the `FABRIC_` prefix, as shown in `.env.example`, to avoid collisions with system-wide variables.
