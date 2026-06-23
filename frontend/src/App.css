@@ -1,0 +1,102 @@
+.app-container {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: 60px 1fr 40px;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.header {
+  grid-column: 1 / -1;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.sidebar-left {
+  grid-column: 1;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.main-content {
+  grid-column: 2;
+  background-color: var(--bg-dark);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-right {
+  grid-column: 3;
+  background-color: var(--bg-panel);
+  border-left: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.footer {
+  grid-column: 1 / -1;
+  background-color: var(--bg-panel);
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background-color: rgba(255, 255, 255, 0.02);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-content {
+  padding: 16px;
+}
+
+/* Common UI Elements */
+.btn {
+  background: var(--bg-element);
+  border: 1px solid var(--border-dim);
+  color: var(--text-main);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0, 245, 255, 0.05);
+}
+
+.btn.primary {
+  background: rgba(0, 245, 255, 0.1);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.btn.danger {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
