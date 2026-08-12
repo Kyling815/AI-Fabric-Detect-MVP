@@ -39,10 +39,14 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_rows = read_manifest(resolve_project_path(args.manifest_csv))
     registry = ReferenceRegistry()
-    entries = registry.list_entries()
+    entries = registry.list_latest_entries()
     if args.reference_id:
-        requested = set(args.reference_id)
-        entries = [entry for entry in entries if entry.reference_id in requested or entry.reference_version in requested]
+        entries = []
+        for requested in dict.fromkeys(args.reference_id):
+            try:
+                entries.append(registry.get(requested))
+            except KeyError as exc:
+                raise SystemExit(str(exc)) from exc
     thresholds = parse_thresholds(args.thresholds)
 
     reports = []
@@ -213,7 +217,18 @@ def evaluate_reference(
 
 
 def choose_recall_first(metrics):
-    return sorted(metrics, key=lambda item: (item.recall, -item.fn, item.f1, item.precision, -item.false_positive_rate), reverse=True)[0]
+    return sorted(
+        metrics,
+        key=lambda item: (
+            item.recall,
+            -item.fn,
+            item.f1,
+            item.precision,
+            -item.false_positive_rate,
+            item.threshold,
+        ),
+        reverse=True,
+    )[0]
 
 
 def read_manifest(path: Path) -> list[dict]:

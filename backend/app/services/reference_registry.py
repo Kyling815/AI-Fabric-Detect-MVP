@@ -23,6 +23,8 @@ class ReferenceRegistryEntry:
     processed_image_count: int
     created_at: str
     thresholds: dict[str, Any]
+    preprocessing_version: str = "v1"
+    configuration_hash: str | None = None
 
 
 class ReferenceRegistry:
@@ -38,9 +40,18 @@ class ReferenceRegistry:
     def list_entries(self) -> list[ReferenceRegistryEntry]:
         return [self._entry_from_record(record) for record in self._raw.get("references", [])]
 
+    def list_latest_entries(self) -> list[ReferenceRegistryEntry]:
+        """Return only the newest artifact for each stable reference id."""
+        latest_by_id: dict[str, ReferenceRegistryEntry] = {}
+        for entry in self.list_entries():
+            latest_by_id[entry.reference_id] = entry
+        return list(latest_by_id.values())
+
     def get(self, reference_id: str | None = None) -> ReferenceRegistryEntry:
         selected = reference_id or self.default_reference_id()
-        for entry in self.list_entries():
+        # Registry entries are chronological; a stable reference_id should
+        # resolve to its most recently rebuilt version.
+        for entry in reversed(self.list_entries()):
             if selected in {entry.reference_id, entry.reference_version}:
                 return entry
         raise KeyError(f"Reference id not found in registry: {selected}")
@@ -48,7 +59,12 @@ class ReferenceRegistry:
     def default_reference_id(self) -> str:
         settings = get_settings()
         if settings.default_reference_id:
-            return settings.default_reference_id
+            configured = settings.default_reference_id
+            if any(
+                configured in {entry.reference_id, entry.reference_version}
+                for entry in self.list_entries()
+            ):
+                return configured
         active = self._raw.get("active_reference_version")
         if active:
             return str(active)
@@ -79,6 +95,8 @@ class ReferenceRegistry:
             processed_image_count=int(record.get("processed_image_count", 0)),
             created_at=str(record.get("created_at", "")),
             thresholds=dict(record.get("thresholds") or {}),
+            preprocessing_version=str(record.get("preprocessing_version", "v1")),
+            configuration_hash=record.get("configuration_hash"),
         )
 
 

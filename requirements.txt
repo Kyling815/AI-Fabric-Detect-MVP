@@ -12,4 +12,4 @@ torchvision==0.20.1
 faiss-cpu==1.9.0.post1
 scikit-learn==1.6.0
 pytest==8.3.4
-
+httpx==0.28.1

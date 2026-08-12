@@ -2,13 +2,18 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
+from uuid import uuid4
 
 import numpy as np
 
 from backend.app.ai.faiss_index import FaissIndexStore
-from backend.app.ai.patching import build_patch_grid, extract_image_patches
-from backend.app.ai.preprocess import ImageReadError, build_preprocess_plan, inspect_image_file, load_resized_rgb_image
+from backend.app.ai.preprocess import ImageReadError, inspect_image_file
+from backend.app.ai.preprocessing.adapter import prepare_image
 from backend.app.ai.projection_head import project_embeddings
+
+
+_REGISTRY_LOCK = Lock()
 
 
 @dataclass(frozen=True)
@@ -30,6 +35,8 @@ class ReferenceBuildConfig:
     projection_head_path: Path | None = None
     reference_id: str | None = None
     threshold_config: dict | None = None
+    preprocessing_version: str = "v1"
+    preprocessing_config: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -53,9 +60,9 @@ class ReferenceLibraryBuilder:
         self.metadata_dir.mkdir(parents=True, exist_ok=True)
 
     def build(self, config: ReferenceBuildConfig, image_paths: list[Path]) -> ReferenceBuildArtifact:
-        from backend.app.ai.feature_extractor import CNNFeatureExtractor
+        from backend.app.ai.feature_extractor import get_cached_feature_extractor
 
-        extractor = CNNFeatureExtractor(
+        extractor = get_cached_feature_extractor(
             model_name=config.model_name,
             device=config.device,
             use_pretrained_weights=config.use_pretrained_weights,
@@ -65,30 +72,30 @@ class ReferenceLibraryBuilder:
         image_records: list[dict] = []
         skipped_records: list[dict] = []
         embedding_offset = 0
+        effective_preprocessing_config: dict = {}
+        configuration_hash: str | None = None
 
         for image_path in image_paths:
             try:
                 image_info = inspect_image_file(image_path)
-                plan = build_preprocess_plan(
-                    width=image_info.width,
-                    height=image_info.height,
-                    target_max_size=config.image_max_size,
+                prepared = prepare_image(
+                    image_path,
+                    preprocessing_version=config.preprocessing_version,
+                    image_max_size=config.image_max_size,
                     patch_size=config.patch_size,
                     patch_stride=config.patch_stride,
+                    preprocessing_config=config.preprocessing_config,
+                    fabric_type=config.fabric_type,
+                    split="reference",
                 )
-                resized_image = load_resized_rgb_image(image_path, plan)
-                grid = build_patch_grid(
-                    image_width=resized_image.width,
-                    image_height=resized_image.height,
-                    patch_size=plan.patch_size,
-                    patch_stride=plan.patch_stride,
-                )
-                patches = extract_image_patches(resized_image, grid)
+                patches = prepared.patches
                 embeddings = extractor.extract((patch.image for patch in patches), batch_size=config.batch_size)
             except (ImageReadError, OSError, ValueError) as exc:
                 skipped_records.append({"path": str(image_path), "reason": str(exc)})
                 continue
 
+            effective_preprocessing_config = prepared.preprocessing_config
+            configuration_hash = prepared.configuration_hash
             all_embeddings.append(embeddings)
             image_records.append(
                 {
@@ -96,8 +103,8 @@ class ReferenceLibraryBuilder:
                     "width": image_info.width,
                     "height": image_info.height,
                     "mode": image_info.mode,
-                    "resized_width": plan.resized_width,
-                    "resized_height": plan.resized_height,
+                    "resized_width": prepared.width,
+                    "resized_height": prepared.height,
                     "patch_count": len(patches),
                     "embedding_start": embedding_offset,
                     "embedding_end": embedding_offset + len(patches),
@@ -141,19 +148,23 @@ class ReferenceLibraryBuilder:
         metadata = {
             "reference_id": config.reference_id or config.reference_version,
             "reference_version": config.reference_version,
-            "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            "created_at": datetime.utcnow().isoformat(timespec="microseconds") + "Z",
             "dataset_name": config.dataset_name,
             "fabric_type": config.fabric_type,
             "source_layer": config.source_layer,
             "normal_path": str(config.normal_path),
             "model": asdict(extractor.info),
             "projection_head": projection_metadata,
+            "preprocessing_version": config.preprocessing_version,
+            "configuration_hash": configuration_hash,
             "preprocess": {
+                "version": config.preprocessing_version,
                 "image_max_size": config.image_max_size,
                 "model_input_size": config.model_input_size,
                 "patch_size": config.patch_size,
                 "patch_stride": config.patch_stride,
                 "batch_size": config.batch_size,
+                "configuration": effective_preprocessing_config,
             },
             "max_images": config.max_images,
             "processed_image_count": len(image_records),
@@ -168,9 +179,9 @@ class ReferenceLibraryBuilder:
             "images": image_records,
             "skipped": skipped_records,
         }
-        metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-        (self.metadata_dir / "latest_reference.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-        self._update_registry(metadata, metadata_path)
+        self._atomic_write_json(metadata_path, metadata)
+        if embedding_matrix.shape[0] > 0:
+            self._activate_reference(metadata, metadata_path)
 
         return ReferenceBuildArtifact(
             reference_version=config.reference_version,
@@ -184,7 +195,12 @@ class ReferenceLibraryBuilder:
             faiss_metric=faiss_info.metric,
         )
 
-    def _update_registry(self, metadata: dict, metadata_path: Path) -> None:
+    def _activate_reference(self, metadata: dict, metadata_path: Path) -> None:
+        with _REGISTRY_LOCK:
+            self._atomic_write_json(self.metadata_dir / "latest_reference.json", metadata)
+            self._update_registry_locked(metadata, metadata_path)
+
+    def _update_registry_locked(self, metadata: dict, metadata_path: Path) -> None:
         registry_path = self.metadata_dir / "reference_registry.json"
         if registry_path.exists():
             try:
@@ -216,6 +232,8 @@ class ReferenceLibraryBuilder:
                 "processed_image_count": metadata["processed_image_count"],
                 "created_at": metadata["created_at"],
                 "thresholds": metadata.get("thresholds", {}),
+                "preprocessing_version": metadata.get("preprocessing_version", "v1"),
+                "configuration_hash": metadata.get("configuration_hash"),
             }
         )
         registry = {
@@ -225,4 +243,12 @@ class ReferenceLibraryBuilder:
             "updated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
             "references": sorted(references, key=lambda item: item["created_at"]),
         }
-        registry_path.write_text(json.dumps(registry, indent=2), encoding="utf-8")
+        self._atomic_write_json(registry_path, registry)
+
+    def _atomic_write_json(self, path: Path, payload: dict) -> None:
+        temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+        try:
+            temporary.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)

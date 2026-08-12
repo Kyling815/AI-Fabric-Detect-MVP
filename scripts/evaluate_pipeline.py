@@ -13,8 +13,9 @@ from backend.app.ai.anomaly_detector import FaissAnomalyDetector
 from backend.app.ai.anomaly_detector import PatchAnomaly
 from backend.app.ai.bbox import filter_boxes_by_cluster_size, merge_suspicious_patches
 from backend.app.ai.feature_extractor import CNNFeatureExtractor
-from backend.app.ai.patching import PatchBox, build_patch_grid, extract_image_patches
-from backend.app.ai.preprocess import ImageReadError, build_preprocess_plan, inspect_image_file, load_resized_rgb_image
+from backend.app.ai.patching import PatchBox
+from backend.app.ai.preprocess import ImageReadError
+from backend.app.ai.preprocessing.adapter import configuration_from_reference_metadata, prepare_image
 from backend.app.ai.projection_head import project_embeddings
 from backend.app.core.config import get_settings
 from backend.app.core.paths import resolve_project_path
@@ -166,6 +167,9 @@ def evaluate_dme(
         "metadata_path": str(metadata_path),
         "split_manifest": str(split_manifest) if split_manifest else None,
         "reference_version": detector.reference_version,
+        "preprocessing_version": configuration_from_reference_metadata(detector.metadata)[0],
+        "configuration_hash": detector.metadata.get("configuration_hash"),
+        "fabric_type": detector.metadata.get("fabric_type"),
         "model_name": settings.model_name,
         "use_pretrained_weights": settings.use_pretrained_weights,
         "image_count": len(image_scores),
@@ -222,26 +226,21 @@ def score_image(
     detector: FaissAnomalyDetector,
 ) -> ImageScore:
     settings = get_settings()
+    version, preprocessing_config = configuration_from_reference_metadata(detector.metadata)
     try:
-        image_info = inspect_image_file(path)
-    except ImageReadError as exc:
-        raise RuntimeError(f"Unreadable image during evaluation: {path}") from exc
-
-    plan = build_preprocess_plan(
-        width=image_info.width,
-        height=image_info.height,
-        target_max_size=settings.image_max_size,
-        patch_size=settings.patch_size,
-        patch_stride=settings.patch_stride,
-    )
-    image = load_resized_rgb_image(path, plan)
-    grid = build_patch_grid(
-        image_width=image.width,
-        image_height=image.height,
-        patch_size=plan.patch_size,
-        patch_stride=plan.patch_stride,
-    )
-    patches = extract_image_patches(image, grid)
+        prepared = prepare_image(
+            path,
+            preprocessing_version=version,
+            image_max_size=int(detector.metadata.get("preprocess", {}).get("image_max_size", settings.image_max_size)),
+            patch_size=int(detector.metadata.get("preprocess", {}).get("patch_size", settings.patch_size)),
+            patch_stride=int(detector.metadata.get("preprocess", {}).get("patch_stride", settings.patch_stride)),
+            preprocessing_config=preprocessing_config,
+            fabric_type=detector.metadata.get("fabric_type"),
+            split="validation",
+        )
+    except (ImageReadError, OSError, ValueError) as exc:
+        raise RuntimeError(f"Image failed {version} preprocessing during evaluation: {path}") from exc
+    patches = prepared.patches
     embeddings = extractor.extract((patch.image for patch in patches), batch_size=settings.batch_size)
     projection_metadata = detector.metadata.get("projection_head")
     if projection_metadata:
@@ -339,7 +338,12 @@ def main() -> None:
         split_manifest=Path(args.split_manifest) if args.split_manifest else None,
     )
 
-    output_path = Path(args.output) if args.output else resolve_project_path(settings.metadata_dir) / "dme_evaluation_latest.json"
+    version = report["preprocessing_version"]
+    output_path = (
+        Path(args.output)
+        if args.output
+        else resolve_project_path(f"storage/evaluation_results/{version}") / "dme_evaluation_latest.json"
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 

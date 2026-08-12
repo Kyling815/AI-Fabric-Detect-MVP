@@ -6,6 +6,7 @@ import numpy as np
 
 from backend.app.ai.faiss_index import FaissIndexStore
 from backend.app.ai.patching import PatchBox
+from backend.app.core.paths import resolve_project_path
 
 
 @dataclass(frozen=True)
@@ -57,7 +58,10 @@ class FaissAnomalyDetector:
         self.threshold = threshold
         self.reference_version = self.metadata.get("reference_version")
         self.metric = self.metadata.get("faiss_metric", "cosine")
-        self.index_path = Path(self.metadata["faiss_index_path"])
+        configured_index_path = Path(self.metadata["faiss_index_path"])
+        self.index_path = configured_index_path if configured_index_path.is_absolute() else resolve_project_path(
+            str(configured_index_path)
+        )
         self.store = FaissIndexStore(metric=self.metric)
         self.index = self.store.load(self.index_path)
 

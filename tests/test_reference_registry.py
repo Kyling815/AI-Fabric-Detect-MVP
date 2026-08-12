@@ -43,3 +43,37 @@ def test_reference_registry_loads_reference_by_id(tmp_path: Path) -> None:
     assert entry.reference_version == "version_1"
     assert entry.embedding_dim == 128
     assert entry.thresholds["anomaly_threshold"] == 0.075
+
+
+def test_reference_registry_uses_latest_version_for_stable_id(tmp_path: Path) -> None:
+    registry_path = tmp_path / "reference_registry.json"
+    base = {
+        "reference_id": "woven",
+        "dataset_name": "unit",
+        "fabric_type": None,
+        "source_layer": "raw_dataset",
+        "metadata_path": "metadata.json",
+        "embeddings_path": "embeddings.npy",
+        "faiss_index_path": "index.faiss",
+        "faiss_metric": "cosine",
+        "embedding_dim": 8,
+        "patch_count": 1,
+        "processed_image_count": 1,
+        "thresholds": {},
+    }
+    registry_path.write_text(
+        json.dumps(
+            {
+                "references": [
+                    {**base, "reference_version": "version_1", "created_at": "2026-01-01T00:00:00Z"},
+                    {**base, "reference_version": "version_2", "created_at": "2026-01-02T00:00:00Z"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    registry = ReferenceRegistry(registry_path=registry_path)
+
+    assert registry.get("woven").reference_version == "version_2"
+    assert [entry.reference_version for entry in registry.list_latest_entries()] == ["version_2"]

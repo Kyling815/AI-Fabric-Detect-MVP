@@ -9,7 +9,7 @@ from backend.app.api.routes_inspection import router as inspection_router
 from backend.app.api.routes_model import router as model_router
 from backend.app.api.routes_reference import router as reference_router
 from backend.app.core.config import get_settings
-from backend.app.core.paths import ensure_runtime_dirs
+from backend.app.core.paths import ensure_runtime_dirs, resolve_project_path
 from backend.app.db.database import init_db
 
 
@@ -32,7 +32,18 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.mount("/storage", StaticFiles(directory=settings.storage_dir), name="storage")
+    # Only user-facing image artifacts are public. Model, index, metadata, and
+    # database files remain outside the static surface.
+    app.mount(
+        "/storage/uploads",
+        StaticFiles(directory=resolve_project_path(settings.uploads_dir)),
+        name="storage-uploads",
+    )
+    app.mount(
+        "/storage/annotated",
+        StaticFiles(directory=resolve_project_path(settings.annotated_dir)),
+        name="storage-annotated",
+    )
 
     app.include_router(health_router, prefix="/api", tags=["health"])
     app.include_router(dataset_router, prefix="/api", tags=["datasets"])

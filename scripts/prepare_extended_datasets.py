@@ -39,10 +39,19 @@ class ManifestRow:
 
 def main() -> None:
     settings = get_settings()
-    parser = argparse.ArgumentParser(description="Create CSV manifests for DME, WFDD, and Lusitano datasets.")
+    parser = argparse.ArgumentParser(
+        description="Create one manifest from all fabric photos in Data/raw/Company and Data/raw/external."
+    )
+    parser.add_argument("--company-root", default=settings.raw_company_dir)
     parser.add_argument("--dme-root", default=settings.dme_dataset_dir)
     parser.add_argument("--wfdd-root", default=settings.wfdd_dataset_dir)
-    parser.add_argument("--lusitano-root", default="Data/raw/external/Lusitano")
+    parser.add_argument("--lusitano-root", default=settings.lusitano_dataset_dir)
+    parser.add_argument(
+        "--company-default-label",
+        choices=("normal", "defective", "unknown"),
+        default="defective",
+        help="Label for loose Company images whose filename/folder does not expose a label.",
+    )
     parser.add_argument("--output-dir", default="storage/metadata/extended_dataset_manifests")
     args = parser.parse_args()
 
@@ -50,38 +59,102 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     warnings: list[str] = []
+    company_rows = discover_company(
+        resolve_project_path(args.company_root),
+        warnings,
+        default_label=args.company_default_label,
+    )
     dme_rows = discover_dme(resolve_project_path(args.dme_root), warnings)
     wfdd_rows = discover_wfdd(resolve_project_path(args.wfdd_root), warnings)
     lusitano_rows = discover_lusitano(resolve_project_path(args.lusitano_root), warnings)
-    all_rows = dme_rows + wfdd_rows + lusitano_rows
+    all_rows = company_rows + dme_rows + wfdd_rows + lusitano_rows
 
+    write_csv(output_dir / "company_all.csv", company_rows)
     write_csv(output_dir / "dme_all.csv", dme_rows)
     write_csv(output_dir / "wfdd_all.csv", wfdd_rows)
     write_csv(output_dir / "lusitano_all.csv", lusitano_rows)
     write_csv(output_dir / "extended_all.csv", all_rows)
+    write_csv(output_dir / "raw_all.csv", all_rows)
     write_csv(output_dir / "extended_reference_candidates.csv", [row for row in all_rows if row.label == "normal"])
     write_csv(
         output_dir / "extended_eval_candidates.csv",
-        [row for row in all_rows if row.split_source in {"dme_class_folder", "wfdd_test", "lusitano_recursive"}],
+        [
+            row
+            for row in all_rows
+            if row.split_source in {"company_recursive", "dme_class_folder", "wfdd_test", "lusitano_recursive"}
+        ],
     )
 
     report = {
         "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
         "output_dir": str(output_dir),
         "counts": {
+            "company": len(company_rows),
             "dme": len(dme_rows),
             "wfdd": len(wfdd_rows),
             "lusitano": len(lusitano_rows),
             "extended_all": len(all_rows),
             "reference_candidates": sum(1 for row in all_rows if row.label == "normal"),
             "eval_candidates": sum(
-                1 for row in all_rows if row.split_source in {"dme_class_folder", "wfdd_test", "lusitano_recursive"}
+                1
+                for row in all_rows
+                if row.split_source in {"company_recursive", "dme_class_folder", "wfdd_test", "lusitano_recursive"}
             ),
         },
         "warnings": warnings,
     }
     (output_dir / "manifest_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))
+
+
+def discover_company(
+    root: Path,
+    warnings: list[str],
+    default_label: str = "defective",
+) -> list[ManifestRow]:
+    if not root.exists():
+        warnings.append(f"Company root not found: {root}")
+        return []
+
+    rows: list[ManifestRow] = []
+    for image_path in list_images(root):
+        label, defect_type = infer_company_label(image_path, root, default_label)
+        if label == "unknown":
+            warnings.append(f"Could not infer Company label for: {image_path}")
+        rows.append(
+            build_row(
+                image_path=image_path,
+                dataset_name="company_iqc",
+                fabric_group="company_iqc",
+                label=label,
+                defect_type=defect_type,
+                split_source="company_recursive",
+            )
+        )
+    return rows
+
+
+def infer_company_label(image_path: Path, root: Path, default_label: str) -> tuple[str, str]:
+    relative_parts = {
+        part.lower().replace("-", "_")
+        for part in image_path.relative_to(root).parts[:-1]
+    }
+    comparable_parts = relative_parts | {part.replace("_", " ") for part in relative_parts}
+    if comparable_parts & NORMAL_NAMES:
+        return "normal", ""
+    if comparable_parts & DEFECT_NAMES:
+        return "defective", _company_defect_type(image_path)
+
+    stem = image_path.stem.lower()
+    if stem.startswith("iqc_"):
+        return "defective", _company_defect_type(image_path)
+    return default_label, "company_marked_defect" if default_label == "defective" else ""
+
+
+def _company_defect_type(image_path: Path) -> str:
+    stem = image_path.stem.lower().removeprefix("iqc_")
+    stem = "_".join(part for part in stem.replace("-", "_").split() if not part.isdigit())
+    return stem.strip("_") or "company_defect"
 
 
 def discover_dme(root: Path, warnings: list[str]) -> list[ManifestRow]:

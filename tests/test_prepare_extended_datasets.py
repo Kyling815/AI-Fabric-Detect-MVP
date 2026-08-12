@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.prepare_extended_datasets import discover_dme, write_csv
+from scripts.prepare_extended_datasets import discover_company, discover_dme, write_csv
 
 
 def test_prepare_extended_datasets_writes_dme_manifest_rows(tmp_path: Path) -> None:
@@ -29,3 +29,21 @@ def test_prepare_extended_datasets_writes_dme_manifest_rows(tmp_path: Path) -> N
     assert defect_row["defect_type"] == "holes"
     assert defect_row["width"] == "10"
     assert defect_row["height"] == "6"
+
+
+def test_prepare_extended_datasets_includes_every_company_image(tmp_path: Path) -> None:
+    root = tmp_path / "Company"
+    root.mkdir()
+    normal = root / "normal"
+    normal.mkdir()
+    Image.new("RGB", (12, 8), color="black").save(root / "IQC_Stain 1.png")
+    Image.new("RGB", (12, 8), color="black").save(root / "unlabeled_capture.png")
+    Image.new("RGB", (12, 8), color="white").save(normal / "company_good.png")
+
+    rows = discover_company(root, warnings=[], default_label="defective")
+
+    assert len(rows) == 3
+    assert [row.label for row in rows].count("defective") == 2
+    assert [row.label for row in rows].count("normal") == 1
+    assert {row.split_source for row in rows} == {"company_recursive"}
+    assert {row.defect_type for row in rows} == {"", "stain", "company_marked_defect"}

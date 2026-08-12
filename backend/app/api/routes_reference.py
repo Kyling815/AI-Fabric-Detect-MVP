@@ -13,7 +13,7 @@ from backend.app.services.reference_service import ReferenceService
 router = APIRouter()
 
 
-@router.post("/reference/build", response_model=ReferenceBuildResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/reference/build", response_model=ReferenceBuildResponse, status_code=status.HTTP_201_CREATED)
 def build_reference_library(
     request: ReferenceBuildRequest,
     db: Session = Depends(get_db),

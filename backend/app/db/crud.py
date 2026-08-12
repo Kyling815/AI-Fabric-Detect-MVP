@@ -11,6 +11,22 @@ def create_inspection(db: Session, inspection: Inspection) -> Inspection:
     return inspection
 
 
+def create_inspection_with_defects(
+    db: Session,
+    inspection: Inspection,
+    defects: list[DetectedDefect],
+) -> Inspection:
+    try:
+        db.add(inspection)
+        db.add_all(defects)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(inspection)
+    return inspection
+
+
 def list_inspections(db: Session) -> list[Inspection]:
     statement = select(Inspection).order_by(Inspection.created_at.desc())
     return list(db.scalars(statement).all())

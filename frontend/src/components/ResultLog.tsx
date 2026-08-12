@@ -4,7 +4,7 @@ export interface LogEntry {
   timestamp: string;
   message: string;
   level: 'INFO' | 'warning' | 'error';
-  type: 'INFO' | 'warning' | 'error';
+  type: 'info' | 'warning' | 'error';
 }
 
 export const ResultLog = ({ logs }: { logs: LogEntry[] }) => {

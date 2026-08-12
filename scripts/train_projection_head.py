@@ -16,8 +16,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 from backend.app.ai.feature_extractor import CNNFeatureExtractor
-from backend.app.ai.patching import build_patch_grid, extract_image_patches
-from backend.app.ai.preprocess import ImageReadError, build_preprocess_plan, inspect_image_file, load_resized_rgb_image
+from backend.app.ai.preprocess import ImageReadError
+from backend.app.ai.preprocessing.adapter import prepare_image
+from backend.app.ai.preprocessing.config import PreprocessConfig
 from backend.app.ai.projection_head import ProjectionHead, save_projection_checkpoint
 from backend.app.core.config import get_settings
 from backend.app.core.paths import resolve_project_path
@@ -47,6 +48,8 @@ def main() -> None:
     parser.add_argument("--validation-ratio", type=float, default=0.2)
     parser.add_argument("--early-stopping-patience", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--preprocessing-version", choices=("v1", "v2"), default="v1")
+    parser.add_argument("--preprocessing-config", default=None)
     args = parser.parse_args()
 
     random.seed(args.seed)
@@ -72,10 +75,17 @@ def main() -> None:
         use_pretrained_weights=settings.use_pretrained_weights,
         model_input_size=settings.model_input_size,
     )
+    preprocessing_config = (
+        (PreprocessConfig.load(Path(args.preprocessing_config)) if args.preprocessing_config else PreprocessConfig()).to_dict()
+        if args.preprocessing_version == "v2"
+        else None
+    )
     embeddings, labels = extract_training_embeddings(
         image_records=image_records,
         extractor=extractor,
         max_patches_per_image=args.max_patches_per_image,
+        preprocessing_version=args.preprocessing_version,
+        preprocessing_config=preprocessing_config,
     )
     if embeddings.shape[0] == 0:
         raise SystemExit("No patches were extracted for training.")
@@ -131,6 +141,13 @@ def main() -> None:
             "defect_patch_count": int((labels == 1).sum()),
             "history": history,
             "args": vars(args),
+            "preprocessing_version": args.preprocessing_version,
+            "preprocessing_config": preprocessing_config,
+            "configuration_hash": (
+                PreprocessConfig.from_mapping(preprocessing_config).configuration_hash
+                if preprocessing_config
+                else None
+            ),
         },
     )
     report = {
@@ -143,6 +160,13 @@ def main() -> None:
         "history": history,
         "final": history[-1],
         "args": vars(args),
+        "preprocessing_version": args.preprocessing_version,
+        "preprocessing_config": preprocessing_config,
+        "configuration_hash": (
+            PreprocessConfig.from_mapping(preprocessing_config).configuration_hash
+            if preprocessing_config
+            else None
+        ),
         "model": {
             "base_model_name": settings.model_name,
             "use_pretrained_weights": settings.use_pretrained_weights,
@@ -244,6 +268,8 @@ def extract_training_embeddings(
     image_records: list[tuple[Path, int]],
     extractor: CNNFeatureExtractor,
     max_patches_per_image: int,
+    preprocessing_version: str = "v1",
+    preprocessing_config: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     settings = get_settings()
     all_embeddings: list[np.ndarray] = []
@@ -251,19 +277,18 @@ def extract_training_embeddings(
 
     for image_path, label in image_records:
         try:
-            image_info = inspect_image_file(image_path)
-        except ImageReadError:
+            prepared = prepare_image(
+                image_path,
+                preprocessing_version=preprocessing_version,
+                image_max_size=settings.image_max_size,
+                patch_size=settings.patch_size,
+                patch_stride=settings.patch_stride,
+                preprocessing_config=preprocessing_config,
+                split="train",
+            )
+        except (ImageReadError, OSError, ValueError):
             continue
-        plan = build_preprocess_plan(
-            width=image_info.width,
-            height=image_info.height,
-            target_max_size=settings.image_max_size,
-            patch_size=settings.patch_size,
-            patch_stride=settings.patch_stride,
-        )
-        image = load_resized_rgb_image(image_path, plan)
-        grid = build_patch_grid(image.width, image.height, plan.patch_size, plan.patch_stride)
-        patches = extract_image_patches(image, grid)
+        patches = prepared.patches
         if max_patches_per_image and len(patches) > max_patches_per_image:
             patches = patches[:max_patches_per_image]
         embeddings = extractor.extract((patch.image for patch in patches), batch_size=settings.batch_size)

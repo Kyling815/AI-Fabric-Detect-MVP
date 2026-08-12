@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import type { DragEvent, ChangeEvent } from 'react';
 import { apiService } from '../services/api';
-import type { InspectionResponse, Defect } from '../services/api';
+import type { InspectionResponse, DefectBox } from '../services/api';
 
 interface InspectionBayProps {
   selectedReferenceId: string | null;
@@ -16,32 +16,26 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    console.log('handleFile called with file:', file);
     if (!file || !file.type.startsWith('image/')) return;
     
     setIsUploading(true);
     // Preview local image
     const reader = new FileReader();
     reader.onload = () => {
-      console.log('FileReader onload called');
       if (typeof reader.result === 'string') {
-        console.log('Setting imageSrc');
         setImageSrc(reader.result);
-      } else {
-        console.log('FileReader result is not a string:', reader.result);
       }
     };
     reader.readAsDataURL(file);
 
     try {
-      console.log('Calling apiService.inspectImage');
       const result = await apiService.inspectImage(file, selectedReferenceId);
-      console.log('API inspection result:', result);
       setResults(result);
       if (onResult) onResult(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Inspection failed:', err);
-      alert('INSPECTION_FAILURE: ' + (err.message || 'Unknown error'));
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert('INSPECTION_FAILURE: ' + message);
     } finally {
       setIsUploading(false);
     }
@@ -113,31 +107,31 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
             />
             
             {/* SVG Overlay for Bounding Boxes */}
-            {results && results.defects && Array.isArray(results.defects) && (
+            {results?.image_metadata && results.boxes.length > 0 && (
               <svg 
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                viewBox={`0 0 ${results.width || 100} ${results.height || 100}`}
+                viewBox={`0 0 ${results.image_metadata.width} ${results.image_metadata.height}`}
                 preserveAspectRatio="xMidYMid meet"
               >
-                {results.defects.map((defect: Defect, i: number) => (
+                {results.boxes.map((defect: DefectBox, i: number) => (
                   <g key={i}>
                     <rect 
-                      x={defect.bbox[0]} 
-                      y={defect.bbox[1]} 
-                      width={defect.bbox[2] - defect.bbox[0]} 
-                      height={defect.bbox[3] - defect.bbox[1]} 
+                      x={defect.x}
+                      y={defect.y}
+                      width={defect.w}
+                      height={defect.h}
                       fill="none" 
                       stroke="var(--accent-orange)" 
                       strokeWidth="2"
                     />
                     <text 
-                      x={defect.bbox[0]} 
-                      y={defect.bbox[1] - 5} 
+                      x={defect.x}
+                      y={Math.max(12, defect.y - 5)}
                       fill="var(--accent-orange)" 
                       fontSize="12" 
                       fontFamily="var(--font-mono)"
                     >
-                      DEFECT_{i} [{Math.round(defect.confidence * 100)}%]
+                      DEFECT_{i} [{Math.round(defect.score * 100)}%]
                     </text>
                   </g>
                 ))}

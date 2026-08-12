@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     # - Data/processed is reserved for optional prepared image datasets.
     # - Data/processed/reference_ready can hold curated normal images for future multi-fabric references.
     data_raw_dir: str = "Data/raw"
+    raw_company_dir: str = "Data/raw/Company"
+    raw_external_dir: str = "Data/raw/external"
     data_processed_dir: str = "Data/processed"
     reference_ready_dir: str = "Data/processed/reference_ready"
 
@@ -32,6 +34,7 @@ class Settings(BaseSettings):
 
     dme_dataset_dir: str = "Data/raw/external/20250129_Fabric_defects/Dataset"
     wfdd_dataset_dir: str = "Data/raw/external/WFDD"
+    lusitano_dataset_dir: str = "Data/raw/external/Lusitano"
     mvtec_dataset_dir: str = "Data/Test"
 
     model_name: str = "resnet18"
@@ -45,6 +48,9 @@ class Settings(BaseSettings):
     patch_size: int = 96
     patch_stride: int = 48
     batch_size: int = 16
+    max_upload_size_bytes: int = Field(default=25 * 1024 * 1024, ge=1)
+    preprocessing_version: str = "v1"
+    preprocessing_config_path: str = ""
     reference_max_images: int = 25
     anomaly_threshold: float = 0.75
     good_area_threshold: float = 0.001

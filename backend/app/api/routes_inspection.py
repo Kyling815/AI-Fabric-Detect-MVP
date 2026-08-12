@@ -8,7 +8,7 @@ from backend.app.services.inspection_service import InspectionService
 router = APIRouter()
 
 
-@router.post("/inspect", response_model=InspectionCreateResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/inspect", response_model=InspectionCreateResponse, status_code=status.HTTP_201_CREATED)
 def inspect_image(
     image: UploadFile = File(...),
     reference_id: str | None = Form(default=None),

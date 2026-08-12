@@ -27,11 +27,21 @@ from backend.app.core.paths import resolve_project_path
 def main() -> None:
     settings = get_settings()
     parser = argparse.ArgumentParser(description="Train an extended pairwise projection head on frozen CNN embeddings.")
-    parser.add_argument("--manifest-csv", default="storage/metadata/extended_dataset_manifests/extended_all.csv")
-    parser.add_argument("--output", default="storage/models/projection_head_extended_v1.pt")
-    parser.add_argument("--report-output", default="storage/metadata/training_reports/projection_head_extended_v1_report.json")
-    parser.add_argument("--max-images-per-group", type=int, default=80)
-    parser.add_argument("--max-patches-per-image", type=int, default=80)
+    parser.add_argument("--manifest-csv", default="storage/metadata/extended_dataset_manifests/raw_all.csv")
+    parser.add_argument("--output", default="storage/models/projection_head_raw_all_v1.pt")
+    parser.add_argument("--report-output", default="storage/metadata/training_reports/projection_head_raw_all_v1_report.json")
+    parser.add_argument(
+        "--max-images-per-group",
+        type=int,
+        default=None,
+        help="Optional cap per fabric-group/label. Omit to use every manifest image.",
+    )
+    parser.add_argument(
+        "--max-patches-per-image",
+        type=int,
+        default=16,
+        help="Maximum spatially distributed patches per image. Use 0 for every patch.",
+    )
     parser.add_argument("--pairs-per-group", type=int, default=4000)
     parser.add_argument("--projection-dim", type=int, default=settings.projection_dim)
     parser.add_argument("--hidden-dim", type=int, default=256)
@@ -142,7 +152,7 @@ def main() -> None:
     print(json.dumps({"checkpoint_path": str(output_path), "report_path": str(report_path), "final": history[-1]}, indent=2))
 
 
-def collect_manifest_records(manifest_path: Path, max_images_per_group: int) -> list[dict]:
+def collect_manifest_records(manifest_path: Path, max_images_per_group: int | None) -> list[dict]:
     grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
     with manifest_path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
@@ -152,7 +162,7 @@ def collect_manifest_records(manifest_path: Path, max_images_per_group: int) -> 
 
     records = []
     for key in sorted(grouped):
-        records.extend(grouped[key][:max_images_per_group])
+        records.extend(grouped[key] if max_images_per_group is None else grouped[key][:max_images_per_group])
     return records
 
 
@@ -178,7 +188,8 @@ def extract_embeddings(records: list[dict], extractor: CNNFeatureExtractor, max_
         grid = build_patch_grid(image.width, image.height, plan.patch_size, plan.patch_stride)
         patches = extract_image_patches(image, grid)
         if max_patches_per_image and len(patches) > max_patches_per_image:
-            patches = patches[:max_patches_per_image]
+            selected_indices = np.linspace(0, len(patches) - 1, num=max_patches_per_image, dtype=int)
+            patches = [patches[index] for index in selected_indices]
         embeddings = extractor.extract((patch.image for patch in patches), batch_size=settings.batch_size)
         all_embeddings.append(embeddings)
         label = 0 if record["label"] == "normal" else 1
@@ -203,6 +214,7 @@ def build_pairs(embeddings: np.ndarray, labels: np.ndarray, groups: np.ndarray, 
     group_names = sorted(set(groups.tolist()))
     positive_pairs = []
     negative_pairs = []
+    all_normal_indices = np.where(labels == 0)[0].tolist()
     for group in group_names:
         normal_indices = np.where((groups == group) & (labels == 0))[0].tolist()
         defect_indices = np.where((groups == group) & (labels == 1))[0].tolist()
@@ -214,6 +226,11 @@ def build_pairs(embeddings: np.ndarray, labels: np.ndarray, groups: np.ndarray, 
         if normal_indices and defect_indices:
             for _ in range(pairs_per_group):
                 negative_pairs.append((rng.choice(normal_indices), rng.choice(defect_indices), 0.0))
+        elif defect_indices and all_normal_indices:
+            # Company/IQC sources may contain defect-only samples. They still
+            # contribute negative pairs against the combined normal pool.
+            for _ in range(pairs_per_group):
+                negative_pairs.append((rng.choice(all_normal_indices), rng.choice(defect_indices), 0.0))
         if normal_indices and other_normal_indices:
             for _ in range(max(1, pairs_per_group // 2)):
                 negative_pairs.append((rng.choice(normal_indices), rng.choice(other_normal_indices), 0.0))

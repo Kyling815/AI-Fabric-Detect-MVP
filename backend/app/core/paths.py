@@ -40,6 +40,8 @@ def dataset_paths(settings: Settings) -> dict[str, Path]:
     # curated image input layer. Storage paths are generated AI artifacts and are not dataset inputs.
     return {
         "raw_root": resolve_project_path(settings.data_raw_dir),
+        "raw_company": resolve_project_path(settings.raw_company_dir),
+        "raw_external": resolve_project_path(settings.raw_external_dir),
         "processed_root": resolve_project_path(settings.data_processed_dir),
         "reference_ready": resolve_project_path(settings.reference_ready_dir),
         "dme_20250129": first_existing_project_path(
@@ -52,5 +54,6 @@ def dataset_paths(settings: Settings) -> dict[str, Path]:
             "Data/Dataset/WFDD",
             "Data/raw/external/WFDD",
         ),
+        "lusitano": resolve_project_path(settings.lusitano_dataset_dir),
         "mvtec_ad": resolve_project_path(settings.mvtec_dataset_dir),
     }

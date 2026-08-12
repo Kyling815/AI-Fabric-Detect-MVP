@@ -11,25 +11,40 @@ export const ReferenceList = ({ onSelect, selectedId }: ReferenceListProps) => {
   const [references, setReferences] = useState<Reference[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const fetchReferences = async () => {
+    setLoading(true);
+    try {
+      const data = await apiService.getReferenceList();
+      setReferences(data.references || []);
+    } catch (err) {
+      console.error('Failed to fetch references:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchReferences = async () => {
-      try {
-        const data = await apiService.getReferenceList();
-        setReferences(data.references || []);
-      } catch (err) {
-        console.error('Failed to fetch references:', err);
-      } finally {
-        setLoading(false);
-      }
+    let active = true;
+    apiService.getReferenceList()
+      .then(data => {
+        if (active) setReferences(data.references || []);
+      })
+      .catch(err => console.error('Failed to fetch references:', err))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-    fetchReferences();
   }, []);
 
   return (
     <div className="reference-list">
       <div className="panel-header">
         <span>REFERENCE_LIBRARY</span>
-        <button className="btn" style={{ padding: '2px 6px', fontSize: '10px' }}>REFRESH</button>
+        <button className="btn" style={{ padding: '2px 6px', fontSize: '10px' }} onClick={() => void fetchReferences()}>
+          REFRESH
+        </button>
       </div>
       <div className="section-content">
         {loading ? (
@@ -55,7 +70,7 @@ export const ReferenceList = ({ onSelect, selectedId }: ReferenceListProps) => {
               >
               <div>{ref.reference_id}</div>
               <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '4px' }}>
-                SAMPLES: {ref.processed_image_count} | STATUS: {ref.status || 'built'}
+                SAMPLES: {ref.processed_image_count} | STATUS: BUILT
               </div>
               </div>
             ))}

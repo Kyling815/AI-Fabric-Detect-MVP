@@ -23,6 +23,8 @@ def main() -> None:
     parser.add_argument("--reference-id", default=None)
     parser.add_argument("--max-images", type=int, default=None)
     parser.add_argument("--split-manifest", default=None)
+    parser.add_argument("--preprocessing-version", choices=("v1", "v2"), default="v1")
+    parser.add_argument("--preprocessing-config", default=None)
     args = parser.parse_args()
 
     init_db()
@@ -39,6 +41,8 @@ def main() -> None:
                     normal_path=args.normal_path,
                     reference_id=args.reference_id,
                     max_images=args.max_images,
+                    preprocessing_version=args.preprocessing_version,
+                    preprocessing_config_path=args.preprocessing_config,
                 )
             )
             response = response.model_dump()
@@ -83,6 +87,8 @@ def build_from_split_manifest(args: argparse.Namespace) -> dict:
             if settings.use_projection_head and settings.projection_head_path
             else None,
             reference_id=args.reference_id,
+            preprocessing_version=args.preprocessing_version,
+            preprocessing_config=_load_preprocessing_config(args.preprocessing_version, args.preprocessing_config),
         ),
         image_paths=image_paths,
     )
@@ -103,6 +109,14 @@ def build_from_split_manifest(args: argparse.Namespace) -> dict:
         "faiss_metric": artifact.faiss_metric,
         "metadata_path": str(artifact.metadata_path),
     }
+
+
+def _load_preprocessing_config(version: str, path: str | None) -> dict | None:
+    if version == "v1":
+        return None
+    from backend.app.ai.preprocessing.config import PreprocessConfig
+
+    return (PreprocessConfig.load(Path(path)) if path else PreprocessConfig()).to_dict()
 
 
 if __name__ == "__main__":

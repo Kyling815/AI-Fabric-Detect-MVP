@@ -17,10 +17,18 @@ from backend.app.services.dataset_service import DatasetService
 
 def main() -> None:
     settings = get_settings()
-    parser = argparse.ArgumentParser(description="Build separate reference libraries for DME, WFDD, and Lusitano.")
+    parser = argparse.ArgumentParser(description="Build separate reference libraries from every available normal set.")
     parser.add_argument("--variant", default="v1", help="Reference id suffix, e.g. v1 or extended_v1.")
-    parser.add_argument("--max-images", type=int, default=None)
-    parser.add_argument("--include-lusitano", action="store_true")
+    parser.add_argument(
+        "--max-images",
+        type=int,
+        default=None,
+        help="Optional cap per reference. Omit to use every normal image.",
+    )
+    lusitano_group = parser.add_mutually_exclusive_group()
+    lusitano_group.add_argument("--include-lusitano", dest="include_lusitano", action="store_true")
+    lusitano_group.add_argument("--exclude-lusitano", dest="include_lusitano", action="store_false")
+    parser.set_defaults(include_lusitano=True)
     parser.add_argument("--output", default=None)
     args = parser.parse_args()
 
@@ -46,7 +54,7 @@ def main() -> None:
         ],
     ]
     if args.include_lusitano:
-        lusitano_normal = resolve_project_path("Data/raw/external/Lusitano/nondefects")
+        lusitano_normal = resolve_project_path(settings.lusitano_dataset_dir) / "nondefects"
         references.append(
             {
                 "reference_id": reference_id("lusitano_group_auto", args.variant),
@@ -57,11 +65,23 @@ def main() -> None:
             }
         )
 
+    company_normal = datasets.resolve_reference_normal_path("company_iqc", None, None)
+    if company_normal is not None:
+        references.append(
+            {
+                "reference_id": reference_id("company_iqc", args.variant),
+                "dataset_name": "company_iqc",
+                "fabric_type": None,
+                "normal_path": company_normal,
+                "source_layer": "raw_dataset",
+            }
+        )
+
     builder = ReferenceLibraryBuilder(
         indexes_dir=resolve_project_path(settings.indexes_dir),
         metadata_dir=resolve_project_path(settings.metadata_dir),
     )
-    max_images = args.max_images or settings.reference_max_images
+    max_images = args.max_images
     results = []
     for item in references:
         normal_path = item["normal_path"]
@@ -131,7 +151,7 @@ def reference_id(prefix: str, variant: str) -> str:
 
 
 def versioned_name(model_name: str, reference_id_value: str) -> str:
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     raw = f"{model_name}_{reference_id_value}_{timestamp}".lower()
     return re.sub(r"[^a-z0-9_]+", "_", raw).strip("_")
 

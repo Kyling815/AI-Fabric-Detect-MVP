@@ -1,38 +1,61 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { apiService } from './services/api';
+import type { InspectionResponse, ModelInfo } from './services/api';
 import { StatusIndicator } from './components/StatusIndicator';
 import { ReferenceList } from './components/ReferenceList';
 import { InspectionBay } from './components/InspectionBay';
 import { ResultLog } from './components/ResultLog';
+import type { LogEntry } from './components/ResultLog';
 
 function App() {
-  const [selectedReferenceId, setSelectedReferenceId] = useState(null);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [modelInfo, setModelInfo] = useState<any>(null);
+  const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>(() => [{
+    timestamp: new Date().toLocaleTimeString(),
+    message: 'SYSTEM_INITIALIZING',
+    level: 'INFO',
+    type: 'info',
+  }]);
+  const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
+  const [lastInspection, setLastInspection] = useState<InspectionResponse | null>(null);
+
+  const addLog = useCallback((message: string, level: LogEntry['level'] = 'INFO') => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prev => [...prev, { timestamp, message, level, type: level.toLowerCase() as LogEntry['type'] }]);
+  }, []);
 
   useEffect(() => {
-    // Initial load
-    addLog('SYSTEM_INITIALIZING', 'INFO');
     apiService.getModelInfo()
       .then(info => {
         setModelInfo(info);
         addLog(`MODEL_LOADED: ${info.model_name || 'UNKNOWN'}`, 'INFO');
       })
       .catch(err => addLog(`MODEL_ERROR: ${err.message}`, 'error'));
-  }, []);
+  }, [addLog]);
 
-  const addLog = (message: string, level = 'INFO') => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, { timestamp, message, level, type: level.toLowerCase() }]);
-  };
-
-  const handleInspectionResult = (result: any) => {
+  const handleInspectionResult = (result: InspectionResponse) => {
+    setLastInspection(result);
     addLog('SCAN_COMPLETE', 'INFO');
-    if (result.defects && result.defects.length > 0) {
-      addLog(`DEFECTS_DETECTED: ${result.defects.length} clusters found`, 'warning');
+    if (result.boxes.length > 0) {
+      addLog(`DEFECTS_DETECTED: ${result.boxes.length} clusters found`, 'warning');
     } else {
       addLog('SCAN_RESULT: NO_DEFECTS_FOUND', 'INFO');
+    }
+  };
+
+  const runDiagnostics = async () => {
+    addLog('SYSTEM_SELF_TEST_START', 'INFO');
+    try {
+      const [health, info, references] = await Promise.all([
+        apiService.checkHealth(),
+        apiService.getModelInfo(),
+        apiService.getReferenceList(),
+      ]);
+      setModelInfo(info);
+      addLog(`DIAGNOSTICS_OK: ${health.status.toUpperCase()} / ${references.references.length} REFERENCES`, 'INFO');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      addLog(`DIAGNOSTICS_FAILED: ${message}`, 'error');
     }
   };
 
@@ -51,7 +74,7 @@ function App() {
       <aside className="sidebar-left">
         <ReferenceList 
           selectedId={selectedReferenceId} 
-          onSelect={(id: any) => {
+          onSelect={(id: string) => {
             setSelectedReferenceId(id);
             addLog(`REFERENCE_SWITCHED: ${id}`, 'INFO');
           }} 
@@ -61,7 +84,7 @@ function App() {
         
         <div className="panel-header">SYSTEM_CONTROLS</div>
         <div className="section-content" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button className="btn" onClick={() => addLog('SYSTEM_SELF_TEST_START', 'INFO')}>RUN_DIAGNOSTICS</button>
+          <button className="btn" onClick={() => void runDiagnostics()}>RUN_DIAGNOSTICS</button>
           <button className="btn danger" onClick={() => setLogs([])}>PURGE_LOGS</button>
         </div>
       </aside>
@@ -79,8 +102,8 @@ function App() {
           {modelInfo ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div><span style={{ color: 'var(--text-dim)' }}>NAME:</span> {modelInfo.model_name}</div>
-              <div><span style={{ color: 'var(--text-dim)' }}>ARCH:</span> {modelInfo.architecture || 'RESNET'}</div>
-              <div><span style={{ color: 'var(--text-dim)' }}>INPUT:</span> {modelInfo.input_size || '224x224'}</div>
+              <div><span style={{ color: 'var(--text-dim)' }}>DEVICE:</span> {modelInfo.device.toUpperCase()}</div>
+              <div><span style={{ color: 'var(--text-dim)' }}>INPUT:</span> {modelInfo.model_input_size}x{modelInfo.model_input_size}</div>
               <div><span style={{ color: 'var(--text-dim)' }}>PRECISION:</span> FP32</div>
             </div>
           ) : (
@@ -90,9 +113,18 @@ function App() {
 
         <div className="panel-header">INSPECTION_METRICS</div>
         <div className="section-content">
-           <div style={{ height: '100px', border: '1px dashed var(--border-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '10px', textAlign: 'center' }}>
-             AWAITING_SCAN_DATA_FOR_METRIC_VISUALIZATION
-           </div>
+          {lastInspection ? (
+            <div className="mono" style={{ display: 'grid', gap: '8px', fontSize: '11px' }}>
+              <div>RESULT: {lastInspection.final_result.toUpperCase()}</div>
+              <div>DEFECT_CLUSTERS: {lastInspection.defect_count}</div>
+              <div>DEFECT_AREA: {(lastInspection.defect_area_ratio * 100).toFixed(2)}%</div>
+              <div>CONFIDENCE: {lastInspection.confidence === null ? 'N/A' : `${(lastInspection.confidence * 100).toFixed(1)}%`}</div>
+            </div>
+          ) : (
+            <div style={{ height: '100px', border: '1px dashed var(--border-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '10px', textAlign: 'center' }}>
+              AWAITING_SCAN_DATA_FOR_METRIC_VISUALIZATION
+            </div>
+          )}
         </div>
 
         <ResultLog logs={logs} />

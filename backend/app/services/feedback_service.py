@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.db import crud
@@ -10,6 +11,8 @@ class FeedbackService:
         self.db = db
 
     def create_feedback(self, request: FeedbackRequest) -> FeedbackResponse:
+        if crud.get_inspection(self.db, request.inspection_id) is None:
+            raise HTTPException(status_code=404, detail="Inspection not found.")
         feedback = Feedback(
             inspection_id=request.inspection_id,
             user_label=request.user_label,
@@ -22,4 +25,3 @@ class FeedbackService:
             inspection_id=feedback.inspection_id,
             status="created",
         )
-

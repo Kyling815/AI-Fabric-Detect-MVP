@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 import torch
@@ -92,3 +93,19 @@ class CNNFeatureExtractor:
         if normalized == "cuda" and not torch.cuda.is_available():
             return torch.device("cpu")
         return torch.device(normalized)
+
+
+@lru_cache(maxsize=8)
+def get_cached_feature_extractor(
+    model_name: str,
+    device: str,
+    use_pretrained_weights: bool,
+    model_input_size: int,
+) -> CNNFeatureExtractor:
+    """Reuse immutable eval-mode encoders across requests."""
+    return CNNFeatureExtractor(
+        model_name=model_name,
+        device=device,
+        use_pretrained_weights=use_pretrained_weights,
+        model_input_size=model_input_size,
+    )

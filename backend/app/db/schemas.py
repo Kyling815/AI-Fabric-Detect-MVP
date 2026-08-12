@@ -157,6 +157,8 @@ class ReferenceBuildRequest(BaseModel):
     normal_path: str | None = None
     reference_id: str | None = None
     max_images: int | None = Field(default=None, ge=1)
+    preprocessing_version: str | None = Field(default=None, pattern="^v[12]$")
+    preprocessing_config_path: str | None = None
 
 
 class ReferenceBuildResponse(BaseModel):
@@ -208,6 +210,8 @@ class ReferenceRegistryItem(BaseModel):
     processed_image_count: int
     created_at: str
     thresholds: dict = Field(default_factory=dict)
+    preprocessing_version: str = "v1"
+    configuration_hash: str | None = None
 
 
 class ReferenceRegistryListResponse(BaseModel):
