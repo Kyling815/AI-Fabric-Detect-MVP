@@ -2,6 +2,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -69,19 +70,58 @@ def main() -> None:
     lusitano_rows = discover_lusitano(resolve_project_path(args.lusitano_root), warnings)
     all_rows = company_rows + dme_rows + wfdd_rows + lusitano_rows
 
+    company_train_rows = [
+        row for row in company_rows if row.split_source in {"company_real", "company_synthetic_train"}
+    ]
+    company_synthetic_rows = [
+        row for row in company_rows if row.split_source.startswith("company_synthetic_")
+    ]
+    company_synthetic_train_rows = [
+        row for row in company_rows if row.split_source == "company_synthetic_train"
+    ]
+    company_synthetic_test_rows = [
+        row for row in company_rows if row.split_source == "company_synthetic_test"
+    ]
+    company_reference_rows = [
+        row for row in company_rows if row.label == "normal" and row.split_source == "company_real"
+    ]
+    company_augmented_reference_rows = [row for row in company_train_rows if row.label == "normal"]
+
     write_csv(output_dir / "company_all.csv", company_rows)
+    write_csv(output_dir / "company_train.csv", company_train_rows)
+    write_csv(output_dir / "company_synthetic_all.csv", company_synthetic_rows)
+    write_csv(output_dir / "company_synthetic_train.csv", company_synthetic_train_rows)
+    write_csv(output_dir / "company_synthetic_test.csv", company_synthetic_test_rows)
+    write_csv(output_dir / "company_reference_candidates.csv", company_reference_rows)
+    write_csv(
+        output_dir / "company_augmented_reference_candidates.csv",
+        company_augmented_reference_rows,
+    )
     write_csv(output_dir / "dme_all.csv", dme_rows)
     write_csv(output_dir / "wfdd_all.csv", wfdd_rows)
     write_csv(output_dir / "lusitano_all.csv", lusitano_rows)
     write_csv(output_dir / "extended_all.csv", all_rows)
     write_csv(output_dir / "raw_all.csv", all_rows)
-    write_csv(output_dir / "extended_reference_candidates.csv", [row for row in all_rows if row.label == "normal"])
+    write_csv(
+        output_dir / "extended_reference_candidates.csv",
+        [
+            row
+            for row in all_rows
+            if row.label == "normal" and not row.split_source.startswith("company_synthetic_")
+        ],
+    )
     write_csv(
         output_dir / "extended_eval_candidates.csv",
         [
             row
             for row in all_rows
-            if row.split_source in {"company_recursive", "dme_class_folder", "wfdd_test", "lusitano_recursive"}
+            if row.split_source in {
+                "company_real",
+                "company_synthetic_test",
+                "dme_class_folder",
+                "wfdd_test",
+                "lusitano_recursive",
+            }
         ],
     )
 
@@ -90,6 +130,11 @@ def main() -> None:
         "output_dir": str(output_dir),
         "counts": {
             "company": len(company_rows),
+            "company_train": len(company_train_rows),
+            "company_synthetic_train": len(company_synthetic_train_rows),
+            "company_synthetic_test": len(company_synthetic_test_rows),
+            "company_reference_candidates": len(company_reference_rows),
+            "company_augmented_reference_candidates": len(company_augmented_reference_rows),
             "dme": len(dme_rows),
             "wfdd": len(wfdd_rows),
             "lusitano": len(lusitano_rows),
@@ -98,7 +143,13 @@ def main() -> None:
             "eval_candidates": sum(
                 1
                 for row in all_rows
-                if row.split_source in {"company_recursive", "dme_class_folder", "wfdd_test", "lusitano_recursive"}
+                if row.split_source in {
+                    "company_real",
+                    "company_synthetic_test",
+                    "dme_class_folder",
+                    "wfdd_test",
+                    "lusitano_recursive",
+                }
             ),
         },
         "warnings": warnings,
@@ -117,38 +168,160 @@ def discover_company(
         return []
 
     rows: list[ManifestRow] = []
+    synthetic_splits = _load_synthetic_company_splits(root, warnings)
     for image_path in list_images(root):
-        label, defect_type = infer_company_label(image_path, root, default_label)
+        relative_parts = image_path.relative_to(root).parts
+        normalized_parts = [part.strip().lower() for part in relative_parts]
+        if "defect_masks" in normalized_parts:
+            continue
+        is_synthetic_tree = "fabric_synthetic_testset" in normalized_parts
+        if is_synthetic_tree and "original" in normalized_parts:
+            # These are byte-identical provenance copies of real Company
+            # images. Keep them on disk, but never duplicate them in a model
+            # or evaluation manifest.
+            continue
+
+        synthetic = _synthetic_company_metadata(image_path, root, synthetic_splits)
+        if is_synthetic_tree and synthetic is None:
+            # Contact sheets and other package-level preview assets are
+            # documentation, not individual model samples.
+            continue
+        if synthetic is None:
+            label, defect_type = infer_company_label(image_path, root, default_label)
+            fabric_group = _company_fabric_group(image_path, root)
+            split_source = "company_real"
+            mask_path = None
+        else:
+            label, defect_type, fabric_group, mask_path, split_source = synthetic
         if label == "unknown":
             warnings.append(f"Could not infer Company label for: {image_path}")
         rows.append(
             build_row(
                 image_path=image_path,
                 dataset_name="company_iqc",
-                fabric_group="company_iqc",
+                fabric_group=fabric_group,
                 label=label,
                 defect_type=defect_type,
-                split_source="company_recursive",
+                split_source=split_source,
+                mask_path=mask_path,
             )
         )
     return rows
 
 
-def infer_company_label(image_path: Path, root: Path, default_label: str) -> tuple[str, str]:
-    relative_parts = {
-        part.lower().replace("-", "_")
-        for part in image_path.relative_to(root).parts[:-1]
+def _synthetic_company_metadata(
+    image_path: Path,
+    root: Path,
+    synthetic_splits: dict[tuple[str, str], str],
+) -> tuple[str, str, str, Path | None, str] | None:
+    parts = image_path.relative_to(root).parts
+    lowered = [part.lower() for part in parts]
+    try:
+        synthetic_index = lowered.index("fabric_synthetic_testset")
+    except ValueError:
+        return None
+    if len(parts) <= synthetic_index + 2:
+        return None
+
+    fabric_name = parts[synthetic_index + 1]
+    class_name = lowered[synthetic_index + 2]
+    fabric_group = f"company_iqc_{fabric_name.lower()}"
+    split_source = synthetic_splits.get(
+        (fabric_name.lower(), image_path.name.lower()),
+        "company_synthetic_test",
+    )
+    if class_name == "synthetic_good":
+        return "normal", "", fabric_group, None, split_source
+    if class_name != "synthetic_defect":
+        return None
+
+    stem = re.sub(r"^defect_\d+_?", "", image_path.stem.lower()).strip("_")
+    mask_name = f"{image_path.stem}_mask{image_path.suffix}"
+    mask_path = root / "fabric_synthetic_testset" / fabric_name / "defect_masks" / mask_name
+    return (
+        "defective",
+        stem or "synthetic_defect",
+        fabric_group,
+        mask_path if mask_path.exists() else None,
+        split_source,
+    )
+
+
+def _load_synthetic_company_splits(
+    root: Path,
+    warnings: list[str],
+) -> dict[tuple[str, str], str]:
+    manifest_path = root / "fabric_synthetic_testset" / "manifest.csv"
+    if not manifest_path.exists():
+        return {}
+    try:
+        with manifest_path.open(newline="", encoding="utf-8") as handle:
+            records = list(csv.DictReader(handle))
+    except (OSError, csv.Error) as exc:
+        warnings.append(f"Could not read Company synthetic manifest: {exc}")
+        return {}
+
+    sources_by_fabric: dict[str, set[str]] = {}
+    for record in records:
+        fabric = (record.get("fabric_set") or "").strip().lower()
+        source = (record.get("source_original") or "").strip().lower()
+        if fabric and source:
+            sources_by_fabric.setdefault(fabric, set()).add(source)
+
+    held_out_sources = {
+        (fabric, source)
+        for fabric, sources in sources_by_fabric.items()
+        for index, source in enumerate(sorted(sources))
+        if index % 5 == 0
     }
-    comparable_parts = relative_parts | {part.replace("_", " ") for part in relative_parts}
-    if comparable_parts & NORMAL_NAMES:
+    splits: dict[tuple[str, str], str] = {}
+    for record in records:
+        fabric = (record.get("fabric_set") or "").strip().lower()
+        filename = (record.get("filename") or "").strip().lower()
+        source = (record.get("source_original") or "").strip().lower()
+        if not fabric or not filename:
+            continue
+        splits[(fabric, filename)] = (
+            "company_synthetic_test"
+            if (fabric, source) in held_out_sources
+            else "company_synthetic_train"
+        )
+    return splits
+
+
+def _company_fabric_group(image_path: Path, root: Path) -> str:
+    parts = image_path.relative_to(root).parts
+    lowered = [part.lower() for part in parts]
+    for index, part in enumerate(lowered[:-1]):
+        if part == "real" and index + 1 < len(parts) - 1:
+            fabric_name = parts[index + 1].strip().lower()
+            if fabric_name != "unclassified":
+                return f"company_iqc_{fabric_name}"
+    return "company_iqc_unclassified"
+
+
+def infer_company_label(image_path: Path, root: Path, default_label: str) -> tuple[str, str]:
+    relative_parts = image_path.relative_to(root).parts[:-1]
+    if any(_is_company_normal_folder(part) for part in relative_parts):
         return "normal", ""
-    if comparable_parts & DEFECT_NAMES:
+    comparable_parts = {
+        re.sub(r"[\s-]+", "_", part.strip().lower()).strip("_")
+        for part in relative_parts
+    }
+    if comparable_parts & {name.replace(" ", "_") for name in DEFECT_NAMES}:
         return "defective", _company_defect_type(image_path)
 
     stem = image_path.stem.lower()
     if stem.startswith("iqc_"):
         return "defective", _company_defect_type(image_path)
     return default_label, "company_marked_defect" if default_label == "defective" else ""
+
+
+def _is_company_normal_folder(name: str) -> bool:
+    normalized = re.sub(r"\(\d+\)$", "", name.strip().lower())
+    normalized = re.sub(r"[\s-]+", "_", normalized).strip("_")
+    normalized_names = {item.replace(" ", "_") for item in NORMAL_NAMES}
+    return normalized in normalized_names or normalized.startswith("good_")
 
 
 def _company_defect_type(image_path: Path) -> str:

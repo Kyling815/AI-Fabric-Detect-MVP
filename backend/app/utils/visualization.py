@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from backend.app.ai.bbox import MergedBox
 
@@ -8,7 +8,7 @@ from backend.app.ai.bbox import MergedBox
 def save_annotated_image(source_path: Path, boxes: list[MergedBox], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(source_path) as image:
-        canvas = image.convert("RGB")
+        canvas = ImageOps.exif_transpose(image).convert("RGB")
 
     draw = ImageDraw.Draw(canvas)
     font = ImageFont.load_default()

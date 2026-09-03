@@ -16,11 +16,11 @@ def classify_inspection(
     bad_area_threshold: float,
 ) -> ClassificationResult:
     max_score = max_anomaly_score or 0.0
-    if defect_count == 0 or defect_area_ratio < good_area_threshold:
+    if defect_count == 0:
         return ClassificationResult(
             label="Good",
             confidence=_confidence(0.9, max_score),
-            reason="No meaningful suspicious defect area was detected.",
+            reason="No localized suspicious defect was detected.",
         )
 
     if defect_area_ratio >= bad_area_threshold:
@@ -30,10 +30,15 @@ def classify_inspection(
             reason="Defect area exceeded the configured bad threshold.",
         )
 
+    reason = (
+        "A localized defect was detected below the configured minimum area threshold."
+        if defect_area_ratio < good_area_threshold
+        else "A small localized suspicious area was detected below the bad threshold."
+    )
     return ClassificationResult(
         label="Acceptable",
         confidence=_confidence(0.7, max_score),
-        reason="A small localized suspicious area was detected below the bad threshold.",
+        reason=reason,
     )
 
 

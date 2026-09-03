@@ -17,12 +17,14 @@ def _service_with_fixture_dataset(tmp_path: Path) -> DatasetService:
     lusitano = tmp_path / "raw" / "external" / "Lusitano" / "nondefects"
     lusitano.mkdir(parents=True)
     Image.new("RGB", (16, 16), color="gray").save(lusitano / "normal.png")
+    wfdd = tmp_path / "wfdd"
+    wfdd.mkdir()
     settings = Settings(
         _env_file=None,
         dme_dataset_dir=str(dme),
         raw_company_dir=str(company),
         raw_external_dir=str(tmp_path / "raw" / "external"),
-        wfdd_dataset_dir=str(tmp_path / "wfdd"),
+        wfdd_dataset_dir=str(wfdd),
         lusitano_dataset_dir=str(tmp_path / "raw" / "external" / "Lusitano"),
         mvtec_dataset_dir=str(tmp_path / "mvtec"),
         data_raw_dir=str(tmp_path / "raw"),
@@ -46,3 +48,17 @@ def test_dme_discovery_finds_normal_reference_folder(tmp_path: Path) -> None:
 
     assert dme.exists
     assert any("non defective" in path.lower() for path in dme.normal_paths)
+
+
+def test_company_discovery_recognizes_all_good_only_folders(tmp_path: Path) -> None:
+    service = _service_with_fixture_dataset(tmp_path)
+    company_root = Path(service.settings.raw_company_dir)
+    for folder_name in ("Good_only", "Good_only(1)"):
+        folder = company_root / folder_name
+        folder.mkdir()
+        Image.new("RGB", (16, 16), color="white").save(folder / f"{folder_name}.png")
+
+    company = next(dataset for dataset in service.discover().datasets if dataset.name == "company_iqc")
+
+    assert len(company.normal_paths) == 2
+    assert next(item for item in company.classes if item.name == "normal").image_count == 2

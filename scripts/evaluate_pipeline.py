@@ -1,7 +1,7 @@
 import argparse
 import json
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 
@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from backend.app.ai.anomaly_detector import FaissAnomalyDetector
 from backend.app.ai.anomaly_detector import PatchAnomaly
-from backend.app.ai.bbox import filter_boxes_by_cluster_size, merge_suspicious_patches
+from backend.app.ai.bbox import MergedBox, localize_pixel_defects, localize_suspicious_patches
 from backend.app.ai.feature_extractor import CNNFeatureExtractor
 from backend.app.ai.patching import PatchBox
 from backend.app.ai.preprocess import ImageReadError
@@ -32,6 +32,7 @@ class ImageScore:
     mean_anomaly_score: float
     anomaly_scores: list[float]
     boxes: list[dict]
+    pixel_boxes: list[dict] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -82,7 +83,7 @@ def compute_threshold_metrics(
         area_ratios.append(area_ratio)
         box_counts.append(len(merged_boxes))
         clustered_patch_count = sum(box.patch_count for box in merged_boxes)
-        predicted_defective = clustered_patch_count >= min_suspicious_patches and area_ratio >= min_area_ratio
+        predicted_defective = clustered_patch_count >= min_suspicious_patches and bool(merged_boxes)
 
         if predicted_defective and image_score.expected_defective:
             tp += 1
@@ -269,6 +270,21 @@ def score_image(
         }
         for patch in result.patch_scores
     ]
+    pixel_boxes = [
+        {
+            "x": box.x,
+            "y": box.y,
+            "w": box.w,
+            "h": box.h,
+            "score": box.score,
+            "patch_count": box.patch_count,
+            "label": box.label,
+        }
+        for box in localize_pixel_defects(
+            prepared.processed_rgb,
+            anomaly_score=max(anomaly_scores) if anomaly_scores else 0.0,
+        )
+    ]
 
     return ImageScore(
         path=str(path),
@@ -279,6 +295,7 @@ def score_image(
         mean_anomaly_score=sum(anomaly_scores) / len(anomaly_scores) if anomaly_scores else 0.0,
         anomaly_scores=anomaly_scores,
         boxes=boxes,
+        pixel_boxes=pixel_boxes,
     )
 
 
@@ -302,8 +319,26 @@ def _merged_boxes_for_threshold(image_score: ImageScore, threshold: float, min_c
         )
         for box in image_score.boxes
     ]
-    merged = merge_suspicious_patches(patches)
-    return filter_boxes_by_cluster_size(merged, min_cluster_patches)
+    suspicious_count = sum(1 for patch in patches if patch.suspicious)
+    if patches and suspicious_count / len(patches) >= 0.5 and image_score.pixel_boxes:
+        return [
+            MergedBox(
+                x=int(box["x"]),
+                y=int(box["y"]),
+                w=int(box["w"]),
+                h=int(box["h"]),
+                score=float(box["score"]),
+                patch_count=int(box.get("patch_count", 1)),
+                label=str(box.get("label", "pixel_localized_defect")),
+            )
+            for box in image_score.pixel_boxes
+        ]
+    return localize_suspicious_patches(
+        patches,
+        image_width=max((box["x"] + box["w"] for box in image_score.boxes), default=0),
+        image_height=max((box["y"] + box["h"] for box in image_score.boxes), default=0),
+        min_patch_count=min_cluster_patches,
+    )
 
 
 def _safe_div(numerator: float, denominator: float) -> float:

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "dataset_version": "company_demo_curated_manifest_v4",
+  "backbone": {
+    "backbone_version": "shared_resnet18_imagenet1k_dense_adapter_company_v4",
+    "base_backbone_version": "shared_resnet18_imagenet1k_v1",
+    "architecture": "resnet18_layer2_layer3_dense+shared_projection_adapter",
+    "adapter_version": "shared_dense_adapter_company_v4",
+    "adapter_path": "storage/models/shared_dense_adapter_company_v4.pt",
+    "use_pretrained_weights": true,
+    "image_max_size": 768,
+    "coreset_size": 12000,
+    "random_seed": 42
+  },
+  "fabrics": {
+    "fabric_001": {
+      "display_name": "Fabric A",
+      "source_name": "fabric_A_warp_knit_mesh",
+      "dataset_mode": "curated_manifest",
+      "manifest_path": "Data/raw/Company/fabrics/fabric_001/manifest.csv",
+      "real_good_dir": "Data/raw/Company/real/fabric_A_warp_knit_mesh/good",
+      "synthetic_dir": "Data/raw/Company/fabric_synthetic_testset/fabric_A_warp_knit_mesh",
+      "adapter_training_sources": [
+        "20260812_214021_800915.png",
+        "20260812_215056_641102.png"
+      ],
+      "validation_sources": [
+        "20260812_214132_788845.png",
+        "20260812_215036_071192.png"
+      ],
+      "locked_test_sources": [
+        "20260812_215108_023097.png",
+        "20260812_215109_598990.png",
+        "20260812_215156_758995.png",
+        "20260812_215850_081412.png",
+        "20260812_215904_753361.png"
+      ]
+    },
+    "fabric_002": {
+      "display_name": "Fabric B",
+      "source_name": "fabric_B_brushed_pile_velour_like",
+      "dataset_mode": "curated_manifest",
+      "manifest_path": "Data/raw/Company/fabrics/fabric_002/manifest.csv",
+      "real_good_dir": "Data/raw/Company/real/fabric_B_brushed_pile_velour_like/good",
+      "synthetic_dir": "Data/raw/Company/fabric_synthetic_testset/fabric_B_brushed_pile_velour_like",
+      "adapter_training_sources": [
+        "20260810_221819_739.png"
+      ],
+      "validation_sources": [
+        "20260810_221759_110.png",
+        "20260810_221815_987.png"
+      ],
+      "locked_test_sources": [
+        "20260810_221740_317.png",
+        "20260810_222734_974.png",
+        "20260810_222804_009.png",
+        "20260810_222836_628.png"
+      ]
+    }
+  }
+}

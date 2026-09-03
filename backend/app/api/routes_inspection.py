@@ -11,14 +11,14 @@ router = APIRouter()
 @router.post("/inspect", response_model=InspectionCreateResponse, status_code=status.HTTP_201_CREATED)
 def inspect_image(
     image: UploadFile = File(...),
-    reference_id: str | None = Form(default=None),
+    fabric_id: str = Form(...),
     db: Session = Depends(get_db),
 ) -> InspectionCreateResponse:
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
 
     service = InspectionService(db)
-    return service.create_placeholder_inspection(image, reference_id=reference_id)
+    return service.create_fabric_inspection(image, fabric_id=fabric_id)
 
 
 @router.get("/inspections", response_model=InspectionListResponse)

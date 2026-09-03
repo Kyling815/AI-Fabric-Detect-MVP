@@ -28,6 +28,12 @@ class Inspection(Base):
     defect_area_ratio: Mapped[float] = mapped_column(Float, default=0.0)
     defect_count: Mapped[int] = mapped_column(Integer, default=0)
     model_version: Mapped[str] = mapped_column(String(120), default="not_built")
+    fabric_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    fabric_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    reference_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    backbone_version: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    anomaly_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    decision_reason: Mapped[str | None] = mapped_column(String(160), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     defects: Mapped[list["DetectedDefect"]] = relationship(back_populates="inspection")

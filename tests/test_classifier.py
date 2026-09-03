@@ -47,3 +47,15 @@ def test_classifier_keeps_many_small_regions_acceptable_until_bad_area_threshold
     )
 
     assert result.label == "Acceptable"
+
+
+def test_classifier_does_not_call_a_filtered_localized_defect_good() -> None:
+    result = classify_inspection(
+        defect_area_ratio=0.002,
+        defect_count=2,
+        max_anomaly_score=1.5,
+        good_area_threshold=0.02,
+        bad_area_threshold=0.10,
+    )
+
+    assert result.label == "Acceptable"

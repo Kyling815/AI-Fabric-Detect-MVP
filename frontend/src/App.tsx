@@ -3,13 +3,13 @@ import './App.css';
 import { apiService } from './services/api';
 import type { InspectionResponse, ModelInfo } from './services/api';
 import { StatusIndicator } from './components/StatusIndicator';
-import { ReferenceList } from './components/ReferenceList';
+import { FabricSelector } from './components/ReferenceList';
 import { InspectionBay } from './components/InspectionBay';
 import { ResultLog } from './components/ResultLog';
 import type { LogEntry } from './components/ResultLog';
 
 function App() {
-  const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
+  const [selectedFabricId, setSelectedFabricId] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>(() => [{
     timestamp: new Date().toLocaleTimeString(),
     message: 'SYSTEM_INITIALIZING',
@@ -38,6 +38,8 @@ function App() {
     addLog('SCAN_COMPLETE', 'INFO');
     if (result.boxes.length > 0) {
       addLog(`DEFECTS_DETECTED: ${result.boxes.length} clusters found`, 'warning');
+    } else if (result.final_result === 'NEEDS_REVIEW') {
+      addLog(`SCAN_RESULT: NEEDS_REVIEW / ${result.reason || 'ANOMALY_WITHOUT_LOCALIZATION'}`, 'warning');
     } else {
       addLog('SCAN_RESULT: NO_DEFECTS_FOUND', 'INFO');
     }
@@ -46,13 +48,13 @@ function App() {
   const runDiagnostics = async () => {
     addLog('SYSTEM_SELF_TEST_START', 'INFO');
     try {
-      const [health, info, references] = await Promise.all([
+      const [health, info, fabrics] = await Promise.all([
         apiService.checkHealth(),
         apiService.getModelInfo(),
-        apiService.getReferenceList(),
+        apiService.getFabrics(),
       ]);
       setModelInfo(info);
-      addLog(`DIAGNOSTICS_OK: ${health.status.toUpperCase()} / ${references.references.length} REFERENCES`, 'INFO');
+      addLog(`DIAGNOSTICS_OK: ${health.status.toUpperCase()} / ${fabrics.fabrics.length} FABRICS`, 'INFO');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       addLog(`DIAGNOSTICS_FAILED: ${message}`, 'error');
@@ -72,11 +74,11 @@ function App() {
       </header>
 
       <aside className="sidebar-left">
-        <ReferenceList 
-          selectedId={selectedReferenceId} 
+        <FabricSelector
+          selectedId={selectedFabricId}
           onSelect={(id: string) => {
-            setSelectedReferenceId(id);
-            addLog(`REFERENCE_SWITCHED: ${id}`, 'INFO');
+            setSelectedFabricId(id);
+            addLog(`FABRIC_SELECTED: ${id}`, 'INFO');
           }} 
         />
         
@@ -90,8 +92,8 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <InspectionBay 
-          selectedReferenceId={selectedReferenceId} 
+        <InspectionBay
+          selectedFabricId={selectedFabricId}
           onResult={handleInspectionResult} 
         />
       </main>
@@ -102,6 +104,7 @@ function App() {
           {modelInfo ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div><span style={{ color: 'var(--text-dim)' }}>NAME:</span> {modelInfo.model_name}</div>
+              <div><span style={{ color: 'var(--text-dim)' }}>BACKBONE:</span> {modelInfo.backbone_version || 'LEGACY'}</div>
               <div><span style={{ color: 'var(--text-dim)' }}>DEVICE:</span> {modelInfo.device.toUpperCase()}</div>
               <div><span style={{ color: 'var(--text-dim)' }}>INPUT:</span> {modelInfo.model_input_size}x{modelInfo.model_input_size}</div>
               <div><span style={{ color: 'var(--text-dim)' }}>PRECISION:</span> FP32</div>
@@ -116,9 +119,13 @@ function App() {
           {lastInspection ? (
             <div className="mono" style={{ display: 'grid', gap: '8px', fontSize: '11px' }}>
               <div>RESULT: {lastInspection.final_result.toUpperCase()}</div>
+              <div>FABRIC: {lastInspection.fabric_name || lastInspection.fabric_id || 'N/A'}</div>
+              <div>REFERENCE: {lastInspection.reference_id || 'N/A'}</div>
+              <div>ANOMALY_SCORE: {lastInspection.anomaly_score === null ? 'N/A' : lastInspection.anomaly_score.toFixed(4)}</div>
               <div>DEFECT_CLUSTERS: {lastInspection.defect_count}</div>
               <div>DEFECT_AREA: {(lastInspection.defect_area_ratio * 100).toFixed(2)}%</div>
               <div>CONFIDENCE: {lastInspection.confidence === null ? 'N/A' : `${(lastInspection.confidence * 100).toFixed(1)}%`}</div>
+              {lastInspection.reason && <div>REASON: {lastInspection.reason}</div>}
             </div>
           ) : (
             <div style={{ height: '100px', border: '1px dashed var(--border-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '10px', textAlign: 'center' }}>

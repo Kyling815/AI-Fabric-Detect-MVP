@@ -58,6 +58,12 @@ def _ensure_inspection_metadata_columns() -> None:
         "image_width": "INTEGER",
         "image_height": "INTEGER",
         "image_mode": "VARCHAR(40)",
+        "fabric_id": "VARCHAR(80)",
+        "fabric_name": "VARCHAR(160)",
+        "reference_id": "VARCHAR(160)",
+        "backbone_version": "VARCHAR(160)",
+        "anomaly_score": "FLOAT",
+        "decision_reason": "VARCHAR(160)",
     }
     missing_columns = {
         column_name: column_type

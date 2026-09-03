@@ -1,15 +1,27 @@
-import numpy as np
+from pathlib import Path
 
-from scripts.train_extended_projection_head import build_pairs
+from PIL import Image
+
+from backend.app.ai.patching import build_patch_grid, extract_image_patches
+from scripts.train_extended_projection_head import select_masked_defect_patches
 
 
-def test_defect_only_company_group_contributes_training_pairs() -> None:
-    embeddings = np.eye(4, dtype=np.float32)
-    labels = np.asarray([0, 0, 1, 1], dtype=np.int64)
-    groups = np.asarray(["external_normal", "external_normal", "company_iqc", "company_iqc"], dtype=object)
+def test_select_masked_defect_patches_keeps_only_intersecting_patches(tmp_path: Path) -> None:
+    image = Image.new("RGB", (96, 48), color="gray")
+    grid = build_patch_grid(96, 48, patch_size=48, patch_stride=48)
+    patches = extract_image_patches(image, grid)
+    mask = Image.new("L", (96, 48), color=0)
+    for x in range(60, 70):
+        for y in range(10, 20):
+            mask.putpixel((x, y), 255)
+    mask_path = tmp_path / "mask.png"
+    mask.save(mask_path)
 
-    left, right, pair_labels = build_pairs(embeddings, labels, groups, pairs_per_group=2, seed=42)
+    selected = select_masked_defect_patches(
+        patches,
+        mask_path=mask_path,
+        output_size=image.size,
+    )
 
-    assert left.shape == right.shape
-    assert left.shape[0] > 0
-    assert np.any(pair_labels == 0.0)
+    assert len(selected) == 1
+    assert selected[0].box.x == 48

@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     indexes_dir: str = "storage/indexes"
     metadata_dir: str = "storage/metadata"
     reference_registry_path: str = "storage/metadata/reference_registry.json"
+    fabric_registry_path: str = "storage/metadata/fabric_registry.json"
+    fabric_demo_config_path: str = "config/company_demo_fabrics.json"
+    references_dir: str = "storage/references"
     default_reference_id: str = ""
 
     dme_dataset_dir: str = "Data/raw/external/20250129_Fabric_defects/Dataset"

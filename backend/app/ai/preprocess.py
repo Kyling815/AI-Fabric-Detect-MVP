@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 @dataclass(frozen=True)
@@ -33,7 +33,8 @@ def inspect_image_file(path: Path) -> ImageReadResult:
         with Image.open(path) as image:
             image.verify()
         with Image.open(path) as image:
-            return ImageReadResult(width=image.width, height=image.height, mode=image.mode)
+            oriented = ImageOps.exif_transpose(image)
+            return ImageReadResult(width=oriented.width, height=oriented.height, mode=oriented.mode)
     except (UnidentifiedImageError, OSError) as exc:
         raise ImageReadError(f"File is not a readable image: {path}") from exc
 
@@ -67,7 +68,7 @@ def build_preprocess_plan(
 
 def load_resized_rgb_image(path: Path, plan: PreprocessPlanResult) -> Image.Image:
     with Image.open(path) as image:
-        rgb_image = image.convert(plan.color_mode)
+        rgb_image = ImageOps.exif_transpose(image).convert(plan.color_mode)
         if rgb_image.size == (plan.resized_width, plan.resized_height):
             return rgb_image.copy()
         return rgb_image.resize((plan.resized_width, plan.resized_height), Image.Resampling.BILINEAR)

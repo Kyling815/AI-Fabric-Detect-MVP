@@ -17,8 +17,13 @@ export interface ImageMetadata {
 
 export interface InspectionResponse {
   inspection_id: string;
+  fabric_id: string | null;
+  fabric_name: string | null;
   reference_id: string | null;
+  backbone_version: string | null;
   final_result: string;
+  anomaly_score: number | null;
+  reason: string | null;
   confidence: number | null;
   defect_area_ratio: number;
   defect_count: number;
@@ -48,6 +53,14 @@ export interface Reference {
   created_at: string;
 }
 
+export interface Fabric {
+  fabric_id: string;
+  display_name: string;
+  status: string;
+  active_reference: string | null;
+  inspectable: boolean;
+}
+
 export interface ModelInfo {
   model_name: string;
   device: string;
@@ -59,6 +72,8 @@ export interface ModelInfo {
   patch_size: number;
   patch_stride: number;
   batch_size: number;
+  backbone_version: string | null;
+  detection_core: string;
 }
 
 export interface ReferenceBuildRequest {
@@ -92,10 +107,10 @@ export const apiService = {
   checkHealth: (): Promise<{ status: string }> =>
     fetch(`${BASE_URL}/health`).then(res => handleResponse<{ status: string }>(res)),
 
-  inspectImage: (imageFile: File, referenceId: string | null = null): Promise<InspectionResponse> => {
+  inspectImage: (imageFile: File, fabricId: string): Promise<InspectionResponse> => {
     const formData = new FormData();
     formData.append('image', imageFile);
-    if (referenceId) formData.append('reference_id', referenceId);
+    formData.append('fabric_id', fabricId);
     return fetch(`${BASE_URL}/inspect`, { method: 'POST', body: formData })
       .then(res => handleResponse<InspectionResponse>(res));
   },
@@ -120,6 +135,9 @@ export const apiService = {
 
   getReferenceList: (): Promise<{ references: Reference[] }> =>
     fetch(`${BASE_URL}/reference/list`).then(res => handleResponse<{ references: Reference[] }>(res)),
+
+  getFabrics: (): Promise<{ fabrics: Fabric[] }> =>
+    fetch(`${BASE_URL}/fabrics`).then(res => handleResponse<{ fabrics: Fabric[] }>(res)),
 
   getDatasetPaths: (): Promise<{ items: Array<{ name: string; path: string; exists: boolean }> }> =>
     fetch(`${BASE_URL}/datasets/paths`).then(res => handleResponse<{ items: Array<{ name: string; path: string; exists: boolean }> }>(res)),

@@ -4,11 +4,11 @@ import { apiService } from '../services/api';
 import type { InspectionResponse, DefectBox } from '../services/api';
 
 interface InspectionBayProps {
-  selectedReferenceId: string | null;
+  selectedFabricId: string | null;
   onResult?: (result: InspectionResponse) => void;
 }
 
-export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayProps) => {
+export const InspectionBay = ({ selectedFabricId, onResult }: InspectionBayProps) => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [results, setResults] = useState<InspectionResponse | null>(null);
@@ -17,6 +17,10 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
 
   const handleFile = async (file: File) => {
     if (!file || !file.type.startsWith('image/')) return;
+    if (!selectedFabricId) {
+      alert('SELECT_FABRIC_BEFORE_SCAN');
+      return;
+    }
     
     setIsUploading(true);
     // Preview local image
@@ -29,7 +33,7 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
     reader.readAsDataURL(file);
 
     try {
-      const result = await apiService.inspectImage(file, selectedReferenceId);
+      const result = await apiService.inspectImage(file, selectedFabricId);
       setResults(result);
       if (onResult) onResult(result);
     } catch (err: unknown) {
@@ -94,8 +98,8 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
             <div className="mono" style={{ fontSize: '14px', color: 'var(--text-dim)', marginBottom: '20px' }}>
               DROP_FABRIC_SAMPLE_FOR_ANALYSIS
             </div>
-            <button className="btn primary" onClick={() => fileInputRef.current?.click()}>
-              INITIALIZE_SCAN
+            <button className="btn primary" disabled={!selectedFabricId} onClick={() => fileInputRef.current?.click()}>
+              {selectedFabricId ? 'INITIALIZE_SCAN' : 'SELECT_FABRIC_FIRST'}
             </button>
           </div>
         ) : (
@@ -131,7 +135,7 @@ export const InspectionBay = ({ selectedReferenceId, onResult }: InspectionBayPr
                       fontSize="12" 
                       fontFamily="var(--font-mono)"
                     >
-                      DEFECT_{i} [{Math.round(defect.score * 100)}%]
+                      DEFECT_{i} [SCORE {defect.score.toFixed(3)}]
                     </text>
                   </g>
                 ))}

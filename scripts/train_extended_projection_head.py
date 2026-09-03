@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image, ImageOps
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 from backend.app.ai.feature_extractor import CNNFeatureExtractor
@@ -100,6 +101,8 @@ def main() -> None:
 
     history = []
     best_val_loss = float("inf")
+    best_epoch = 0
+    best_state = None
     epochs_without_improvement = 0
     for epoch in range(1, args.epochs + 1):
         train_loss = run_pairwise_epoch(model, train_loader, optimizer, device, args.temperature)
@@ -108,12 +111,21 @@ def main() -> None:
         print(f"epoch={epoch} train_loss={train_loss:.4f} val_loss={val_loss:.4f} val_accuracy={val_accuracy:.4f}")
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            best_epoch = epoch
+            best_state = {
+                name: value.detach().cpu().clone()
+                for name, value in model.state_dict().items()
+            }
             epochs_without_improvement = 0
         else:
             epochs_without_improvement += 1
             if args.early_stopping_patience and epochs_without_improvement >= args.early_stopping_patience:
                 print(f"early_stopping epoch={epoch} patience={args.early_stopping_patience}")
                 break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    best_result = next(item for item in history if item["epoch"] == best_epoch)
 
     output_path = resolve_project_path(args.output)
     save_projection_checkpoint(
@@ -130,6 +142,7 @@ def main() -> None:
             "positive_pair_count": int(pair_labels.sum()),
             "negative_pair_count": int(pair_labels.shape[0] - pair_labels.sum()),
             "history": history,
+            "best": best_result,
             "args": vars(args),
         },
     )
@@ -143,13 +156,24 @@ def main() -> None:
         "positive_pair_count": int(pair_labels.sum()),
         "negative_pair_count": int(pair_labels.shape[0] - pair_labels.sum()),
         "final": history[-1],
+        "best": best_result,
         "history": history,
         "args": vars(args),
     }
     report_path = resolve_project_path(args.report_output)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(json.dumps({"checkpoint_path": str(output_path), "report_path": str(report_path), "final": history[-1]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "checkpoint_path": str(output_path),
+                "report_path": str(report_path),
+                "final": history[-1],
+                "best": best_result,
+            },
+            indent=2,
+        )
+    )
 
 
 def collect_manifest_records(manifest_path: Path, max_images_per_group: int | None) -> list[dict]:
@@ -187,6 +211,15 @@ def extract_embeddings(records: list[dict], extractor: CNNFeatureExtractor, max_
         image = load_resized_rgb_image(image_path, plan)
         grid = build_patch_grid(image.width, image.height, plan.patch_size, plan.patch_stride)
         patches = extract_image_patches(image, grid)
+        mask_path = Path(record["mask_path"]) if record.get("mask_path") else None
+        if record["label"] == "defective" and mask_path and mask_path.exists():
+            masked_patches = select_masked_defect_patches(
+                patches,
+                mask_path=mask_path,
+                output_size=(image.width, image.height),
+            )
+            if masked_patches:
+                patches = masked_patches
         if max_patches_per_image and len(patches) > max_patches_per_image:
             selected_indices = np.linspace(0, len(patches) - 1, num=max_patches_per_image, dtype=int)
             patches = [patches[index] for index in selected_indices]
@@ -207,6 +240,38 @@ def extract_embeddings(records: list[dict], extractor: CNNFeatureExtractor, max_
         np.asarray(all_labels, dtype=np.int64),
         np.asarray(all_groups, dtype=object),
     )
+
+
+def select_masked_defect_patches(
+    patches,
+    *,
+    mask_path: Path,
+    output_size: tuple[int, int],
+):
+    """Keep only patches intersecting a known defect mask.
+
+    Synthetic defect images are weakly labelled at image level, but most of
+    their patches are normal fabric. Treating every patch as defective teaches
+    the projection head contradictory pairs and can collapse anomaly scores.
+    """
+
+    with Image.open(mask_path) as source_mask:
+        mask = ImageOps.exif_transpose(source_mask).convert("L")
+        if mask.size != output_size:
+            mask = mask.resize(output_size, Image.Resampling.NEAREST)
+        return [
+            patch
+            for patch in patches
+            if mask.crop(
+                (
+                    patch.box.x,
+                    patch.box.y,
+                    patch.box.x + patch.box.w,
+                    patch.box.y + patch.box.h,
+                )
+            ).getbbox()
+            is not None
+        ]
 
 
 def build_pairs(embeddings: np.ndarray, labels: np.ndarray, groups: np.ndarray, pairs_per_group: int, seed: int):

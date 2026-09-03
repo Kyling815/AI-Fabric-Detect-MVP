@@ -20,6 +20,7 @@ storage/annotated/*
 storage/indexes/*
 storage/metadata/*
 storage/models/*
+storage/references/*
 storage/app.db
 
 !storage/uploads/.gitkeep
@@ -27,3 +28,4 @@ storage/app.db
 !storage/indexes/.gitkeep
 !storage/metadata/.gitkeep
 !storage/models/.gitkeep
+!storage/references/.gitkeep

@@ -87,8 +87,13 @@ class AnomalySummary(BaseModel):
 
 class InspectionCreateResponse(BaseModel):
     inspection_id: str
+    fabric_id: str | None = None
+    fabric_name: str | None = None
     reference_id: str | None = None
+    backbone_version: str | None = None
     final_result: str
+    anomaly_score: float | None = None
+    reason: str | None = None
     confidence: float | None = None
     defect_area_ratio: float
     defect_count: int
@@ -110,11 +115,26 @@ class InspectionListItem(BaseModel):
     final_result: str
     defect_area_ratio: float
     defect_count: int
+    fabric_id: str | None = None
+    fabric_name: str | None = None
+    reference_id: str | None = None
     created_at: datetime
 
 
 class InspectionListResponse(BaseModel):
     items: list[InspectionListItem]
+
+
+class FabricListItem(BaseModel):
+    fabric_id: str
+    display_name: str
+    status: str
+    active_reference: str | None = None
+    inspectable: bool
+
+
+class FabricListResponse(BaseModel):
+    fabrics: list[FabricListItem]
 
 
 class DatasetPathItem(BaseModel):
@@ -251,3 +271,4 @@ class ModelInfoResponse(BaseModel):
     good_area_threshold: float
     bad_area_threshold: float
     detection_core: str
+    backbone_version: str | None = None

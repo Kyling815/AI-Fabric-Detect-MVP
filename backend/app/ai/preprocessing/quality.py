@@ -7,6 +7,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from PIL import Image, UnidentifiedImageError
 
 from backend.app.ai.preprocessing.config import PreprocessConfig
 
@@ -54,7 +55,34 @@ def load_image(path: Path) -> tuple[np.ndarray | None, str | None]:
         return None, "unsupported_channel_count"
     if decoded.dtype != np.uint8:
         decoded = cv2.normalize(decoded, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    decoded = _apply_exif_orientation(decoded, _read_exif_orientation(path))
     return decoded, None
+
+
+def _read_exif_orientation(path: Path) -> int:
+    try:
+        with Image.open(path) as image:
+            return int(image.getexif().get(274, 1))
+    except (OSError, UnidentifiedImageError, TypeError, ValueError):
+        return 1
+
+
+def _apply_exif_orientation(image: np.ndarray, orientation: int) -> np.ndarray:
+    if orientation == 2:
+        return cv2.flip(image, 1)
+    if orientation == 3:
+        return cv2.rotate(image, cv2.ROTATE_180)
+    if orientation == 4:
+        return cv2.flip(image, 0)
+    if orientation == 5:
+        return cv2.transpose(image)
+    if orientation == 6:
+        return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+    if orientation == 7:
+        return cv2.flip(cv2.transpose(image), -1)
+    if orientation == 8:
+        return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return image
 
 
 def calculate_quality_metrics(

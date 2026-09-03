@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from pathlib import Path
 from typing import Any, Mapping
@@ -68,6 +68,7 @@ class PreparedImage:
     configuration_hash: str | None
     preprocessing_config: dict[str, Any]
     coordinate_transform: CoordinateTransform
+    processed_rgb: np.ndarray = field(repr=False)
 
 
 def prepare_image(
@@ -119,6 +120,7 @@ def prepare_image(
                     scale=plan.scale,
                 ),
             ),
+            processed_rgb=np.asarray(image, dtype=np.uint8).copy(),
         )
     if version != "v2":
         raise ValueError(f"Unsupported preprocessing version: {preprocessing_version}")
@@ -180,6 +182,7 @@ def prepare_image(
             orientation_correction_degrees=orientation.correction_degrees if orientation else 0.0,
             orientation_applied=bool(orientation and orientation.applied),
         ),
+        processed_rgb=cv2.cvtColor(result.processed_image, cv2.COLOR_BGR2RGB),
     )
 
 

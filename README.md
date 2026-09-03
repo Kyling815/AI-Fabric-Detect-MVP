@@ -4,6 +4,28 @@ AI Fabric Detect MVP is a local-first computer vision web application for fabric
 
 The core defect detection pipeline is not an LLM. It is designed around pretrained computer vision encoders, patch embeddings, FAISS or cosine similarity search, anomaly scoring, and rule-based Good / Acceptable / Bad classification.
 
+## Fabric A/B demo architecture (2026-08-14)
+
+The current migration adds one cached ResNet18 dense feature extractor (`layer2` + `layer3`) and isolated, versioned memory banks for `fabric_001` (Fabric A) and `fabric_002` (Fabric B). The operator must select a stable `fabric_id`; the backend never falls back to another fabric reference. Decisions are `GOOD`, `NEEDS_REVIEW`, or `BAD`, and a significant image anomaly without a bbox is fail-safe `NEEDS_REVIEW`.
+
+The source-disjoint v1/v2 candidates did not meet the locked-test acceptance gate. A shared supervised dense adapter and isolated v3 references were subsequently retrained, but v3 generalized worse to unseen defect categories (A recall 40%, B recall 20%). The registry therefore intentionally has no active reference. The UI shows both fabrics as inactive rather than silently using a stale or rejected artifact. See [the Fabric A/B implementation report](docs/fabric_ab_demo_2026-08-14.md) and [the v3 retraining report](docs/fabric_ab_retrain_v3_2026-08-15.md).
+
+New API contract:
+
+```text
+GET  /api/fabrics
+POST /api/inspect   multipart: image=<file>, fabric_id=fabric_001
+```
+
+Prepare, build, calibrate, evaluate, and activate only if accepted:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\prepare_company_demo_manifests.py
+.\.venv\Scripts\python.exe scripts\build_fabric_references.py --version 1
+.\.venv\Scripts\python.exe scripts\calibrate_fabric_references.py --reference-version 1
+.\.venv\Scripts\python.exe scripts\evaluate_fabric_demo.py --split locked_test --reference-version 1 --activate-if-accepted
+```
+
 ## Current Phase
 
 Phase 1 is the project setup and backend skeleton:
@@ -195,6 +217,15 @@ python scripts/build_extended_references.py --variant raw_all_v1
 ```
 
 This command now uses every available normal image by default and includes Lusitano automatically. Use `--max-images N` for a quick test or `--exclude-lusitano` when intentionally omitting that large normal set. References remain separate by fabric type because combining unrelated fabric textures into one FAISS index can weaken anomaly scoring.
+
+If a long build is interrupted, preview and resume the same variant without rebuilding completed compatible references:
+
+```powershell
+python scripts/build_extended_references.py --variant raw_all_v2 --resume --plan
+python scripts/build_extended_references.py --variant raw_all_v2 --resume
+```
+
+Resume validates the registered metadata, embedding/index files, projection checkpoint, model configuration, image cap, and source-image count before skipping an existing reference. Use a new variant whenever the model or intended reference dataset changes.
 
 After training the extended projection head, enable it in `.env`, rebuild separate references, and evaluate:
 

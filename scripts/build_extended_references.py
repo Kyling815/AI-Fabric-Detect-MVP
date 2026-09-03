@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import re
 import sys
@@ -13,6 +14,7 @@ from backend.app.ai.reference_library import ReferenceBuildConfig, ReferenceLibr
 from backend.app.core.config import get_settings
 from backend.app.core.paths import resolve_project_path
 from backend.app.services.dataset_service import DatasetService
+from backend.app.services.reference_registry import ReferenceRegistry, ReferenceRegistryEntry
 
 
 def main() -> None:
@@ -25,11 +27,36 @@ def main() -> None:
         default=None,
         help="Optional cap per reference. Omit to use every normal image.",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip complete, compatible references already registered for this variant.",
+    )
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Show what would be skipped/built without extracting embeddings.",
+    )
     lusitano_group = parser.add_mutually_exclusive_group()
     lusitano_group.add_argument("--include-lusitano", dest="include_lusitano", action="store_true")
     lusitano_group.add_argument("--exclude-lusitano", dest="include_lusitano", action="store_false")
     parser.set_defaults(include_lusitano=True)
     parser.add_argument("--output", default=None)
+    parser.add_argument(
+        "--only-reference",
+        default=None,
+        help="Build only one reference family, e.g. company_iqc, dme_plain or wfdd_grey_cloth.",
+    )
+    parser.add_argument(
+        "--projection-head-path",
+        default=None,
+        help="Override FABRIC_PROJECTION_HEAD_PATH for this build.",
+    )
+    parser.add_argument(
+        "--reference-manifest-csv",
+        default=None,
+        help="Optional CSV whose normal rows define the exact reference image set.",
+    )
     args = parser.parse_args()
 
     datasets = DatasetService()
@@ -67,32 +94,94 @@ def main() -> None:
 
     company_normal = datasets.resolve_reference_normal_path("company_iqc", None, None)
     if company_normal is not None:
+        company_normal_dirs = datasets._company_normal_dirs(paths["raw_company"])
         references.append(
             {
                 "reference_id": reference_id("company_iqc", args.variant),
                 "dataset_name": "company_iqc",
                 "fabric_type": None,
-                "normal_path": company_normal,
+                "normal_path": paths["raw_company"],
+                "normal_paths": company_normal_dirs,
                 "source_layer": "raw_dataset",
             }
         )
+
+    if args.only_reference:
+        requested = args.only_reference.strip().lower()
+        references = [
+            item
+            for item in references
+            if item["reference_id"].startswith(requested) or item["dataset_name"].lower() == requested
+        ]
+        if not references:
+            raise SystemExit(f"No reference matched --only-reference={args.only_reference!r}")
 
     builder = ReferenceLibraryBuilder(
         indexes_dir=resolve_project_path(settings.indexes_dir),
         metadata_dir=resolve_project_path(settings.metadata_dir),
     )
+    registry = ReferenceRegistry()
     max_images = args.max_images
+    configured_projection_path = args.projection_head_path or settings.projection_head_path
+    projection_head_path = (
+        resolve_project_path(configured_projection_path)
+        if settings.use_projection_head and configured_projection_path
+        else None
+    )
     results = []
     for item in references:
         normal_path = item["normal_path"]
         if not normal_path.exists():
             results.append({**serializable_item(item), "status": "path_not_found"})
             continue
-        image_paths = datasets.list_images(normal_path, max_images=max_images)
+        normal_paths = item.get("normal_paths") or [normal_path]
+        if args.reference_manifest_csv:
+            image_paths = reference_images_from_manifest(
+                resolve_project_path(args.reference_manifest_csv),
+                dataset_name=item["dataset_name"],
+                fabric_type=item["fabric_type"],
+            )
+        else:
+            image_paths = sorted(
+                {
+                    image_path
+                    for source_path in normal_paths
+                    for image_path in datasets.list_images(source_path)
+                },
+                key=lambda path: str(path).lower(),
+            )
+        if max_images is not None:
+            image_paths = image_paths[:max_images]
         if not image_paths:
             results.append({**serializable_item(item), "status": "empty_reference_path"})
             continue
 
+        reusable = None
+        if args.resume:
+            reusable = reusable_reference(
+                registry=registry,
+                item=item,
+                image_paths=image_paths,
+                max_images=max_images,
+                settings=settings,
+                projection_head_path=projection_head_path,
+            )
+        if reusable is not None:
+            print(f"[resume] skip {item['reference_id']} ({len(image_paths)} source images)", flush=True)
+            results.append(reusable)
+            continue
+        if args.plan:
+            print(f"[plan] build {item['reference_id']} ({len(image_paths)} source images)", flush=True)
+            results.append(
+                {
+                    **serializable_item(item),
+                    "status": "would_build",
+                    "source_image_count": len(image_paths),
+                }
+            )
+            continue
+
+        print(f"[build] start {item['reference_id']} ({len(image_paths)} source images)", flush=True)
         reference_version = versioned_name(settings.model_name, item["reference_id"])
         artifact = builder.build(
             ReferenceBuildConfig(
@@ -112,9 +201,7 @@ def main() -> None:
                 source_layer=item["source_layer"],
                 reference_id=item["reference_id"],
                 threshold_config=current_threshold_config(settings),
-                projection_head_path=resolve_project_path(settings.projection_head_path)
-                if settings.use_projection_head and settings.projection_head_path
-                else None,
+                projection_head_path=projection_head_path,
             ),
             image_paths=image_paths,
         )
@@ -132,15 +219,24 @@ def main() -> None:
                 "metadata_path": str(artifact.metadata_path),
             }
         )
+        print(
+            f"[build] done {item['reference_id']} "
+            f"(processed={artifact.processed_image_count}, skipped={artifact.skipped_image_count}, "
+            f"patches={artifact.patch_count})",
+            flush=True,
+        )
 
     report = {
         "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
         "variant": args.variant,
         "max_images": max_images,
-        "projection_head_path": settings.projection_head_path if settings.use_projection_head else "",
+        "resume": args.resume,
+        "plan_only": args.plan,
+        "projection_head_path": str(projection_head_path) if projection_head_path else "",
         "references": results,
     }
-    output_path = Path(args.output) if args.output else resolve_project_path(settings.metadata_dir) / f"build_extended_references_{args.variant}.json"
+    default_name = f"build_extended_references_{args.variant}{'_plan' if args.plan else ''}.json"
+    output_path = Path(args.output) if args.output else resolve_project_path(settings.metadata_dir) / default_name
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps({"output_path": str(output_path), "references": results}, indent=2))
@@ -165,8 +261,105 @@ def current_threshold_config(settings) -> dict:
     }
 
 
+def reference_images_from_manifest(
+    manifest_path: Path,
+    *,
+    dataset_name: str,
+    fabric_type: str | None,
+) -> list[Path]:
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Reference manifest not found: {manifest_path}")
+    with manifest_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    paths = {
+        Path(row["image_path"])
+        for row in rows
+        if row.get("label") == "normal"
+        and row.get("dataset_name") == dataset_name
+        and (not fabric_type or row.get("fabric_group", "").endswith(fabric_type))
+    }
+    missing = sorted(path for path in paths if not path.exists())
+    if missing:
+        raise FileNotFoundError(f"Reference manifest contains {len(missing)} missing image(s): {missing[0]}")
+    return sorted(paths, key=lambda path: str(path).lower())
+
+
+def reusable_reference(
+    registry: ReferenceRegistry,
+    item: dict,
+    image_paths: list[Path],
+    max_images: int | None,
+    settings,
+    projection_head_path: Path | None,
+) -> dict | None:
+    try:
+        entry = registry.get(item["reference_id"])
+    except KeyError:
+        return None
+    if entry.dataset_name != item["dataset_name"] or entry.fabric_type != item["fabric_type"]:
+        return None
+    if any(not path.exists() or path.stat().st_size <= 0 for path in (entry.metadata_path, entry.embeddings_path, entry.faiss_index_path)):
+        return None
+
+    header = read_metadata_header(entry.metadata_path)
+    expected_projection = str(projection_head_path.resolve()) if projection_head_path else None
+    actual_projection = metadata_header_value(header, "checkpoint_path")
+    if actual_projection is not None:
+        actual_projection = str(resolve_project_path(str(actual_projection)).resolve())
+    if actual_projection != expected_projection:
+        return None
+    if metadata_header_value(header, "model_name") != settings.model_name:
+        return None
+    if metadata_header_value(header, "use_pretrained_weights") != settings.use_pretrained_weights:
+        return None
+    if metadata_header_value(header, "max_images") != max_images:
+        return None
+
+    processed = metadata_header_value(header, "processed_image_count")
+    skipped = metadata_header_value(header, "skipped_image_count")
+    if not isinstance(processed, int) or not isinstance(skipped, int):
+        return None
+    if processed + skipped != len(image_paths):
+        return None
+
+    return {
+        **serializable_item(item),
+        "status": "skipped_existing",
+        "reference_version": entry.reference_version,
+        "processed_image_count": processed,
+        "skipped_image_count": skipped,
+        "patch_count": entry.patch_count,
+        "embedding_dim": entry.embedding_dim,
+        "embeddings_path": str(entry.embeddings_path),
+        "faiss_index_path": str(entry.faiss_index_path),
+        "metadata_path": str(entry.metadata_path),
+    }
+
+
+def read_metadata_header(path: Path, max_bytes: int = 262_144) -> str:
+    with path.open(encoding="utf-8") as handle:
+        return handle.read(max_bytes).split('"images"', 1)[0]
+
+
+def metadata_header_value(header: str, key: str):
+    match = re.search(
+        rf'"{re.escape(key)}"\s*:\s*(null|true|false|-?\d+(?:\.\d+)?|"(?:\\.|[^"\\])*")',
+        header,
+    )
+    return json.loads(match.group(1)) if match else None
+
+
 def serializable_item(item: dict) -> dict:
-    return {key: str(value) if isinstance(value, Path) else value for key, value in item.items()}
+    return {
+        key: (
+            str(value)
+            if isinstance(value, Path)
+            else [str(entry) if isinstance(entry, Path) else entry for entry in value]
+            if isinstance(value, list)
+            else value
+        )
+        for key, value in item.items()
+    }
 
 
 if __name__ == "__main__":

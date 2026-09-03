@@ -9,8 +9,11 @@ from pathlib import Path
 import numpy as np
 
 from backend.app.ai.anomaly_detector import AnomalyDetectionResult, FaissAnomalyDetector, ReferenceNotReadyError
-from backend.app.ai.bbox import MergedBox, filter_boxes_by_cluster_size, merge_suspicious_patches
+from backend.app.ai.bbox import MergedBox, localize_pixel_defects, localize_suspicious_patches
 from backend.app.ai.classifier import classify_inspection
+from backend.app.ai.dense_anomaly import DenseReferenceDetector
+from backend.app.ai.dense_feature_extractor import get_shared_dense_extractor
+from backend.app.ai.fabric_decision import decide_fabric_inspection
 from backend.app.ai.patching import ImagePatch, PatchGrid, build_patch_grid
 from backend.app.ai.preprocess import ImageReadError, build_preprocess_plan, inspect_image_file
 from backend.app.ai.preprocessing.adapter import CoordinateTransform, PreparedImage, configuration_from_reference_metadata, prepare_image
@@ -32,6 +35,7 @@ from backend.app.db.schemas import (
     SuspiciousPatch,
 )
 from backend.app.services.storage_service import StorageService, UploadTooLargeError
+from backend.app.services.fabric_registry import FabricRegistry, FabricRegistryError
 from backend.app.services.reference_registry import ReferenceRegistry
 from backend.app.utils.visualization import save_annotated_image
 
@@ -67,6 +71,136 @@ class InspectionService:
         self.storage = StorageService()
         self.settings = get_settings()
 
+    def create_fabric_inspection(self, image: UploadFile, fabric_id: str) -> InspectionCreateResponse:
+        """Run the demo dense-anomaly pipeline against exactly one active fabric reference."""
+        try:
+            registry = FabricRegistry()
+            reference = registry.get_active_reference(fabric_id)
+        except FabricRegistryError as exc:
+            status_code = 400 if str(exc).startswith("Unknown fabric_id") else 409
+            raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+
+        backbone = registry.shared_backbone
+        try:
+            stored_upload = self.storage.save_upload(image)
+        except UploadTooLargeError as exc:
+            raise HTTPException(status_code=413, detail=str(exc)) from exc
+
+        annotated = None
+        persisted = False
+        try:
+            try:
+                image_info = inspect_image_file(stored_upload.absolute_path)
+            except ImageReadError as exc:
+                raise HTTPException(status_code=400, detail="Uploaded file could not be decoded as an image.") from exc
+
+            extractor = get_shared_dense_extractor(
+                str(backbone["backbone_version"]),
+                self.settings.device,
+                bool(backbone.get("use_pretrained_weights", True)),
+                str(resolve_project_path(backbone["adapter_path"])) if backbone.get("adapter_path") else "",
+            )
+            features = extractor.extract_path(
+                stored_upload.absolute_path,
+                image_max_size=int(backbone.get("image_max_size", self.settings.image_max_size)),
+            )
+            try:
+                detector = DenseReferenceDetector(reference.metadata_path)
+                anomaly = detector.score(
+                    features.embeddings,
+                    features.boxes,
+                    grid_rows=features.grid_rows,
+                    grid_cols=features.grid_cols,
+                    image_width=features.processed_width,
+                    image_height=features.processed_height,
+                    thresholds=reference.thresholds,
+                )
+            except (OSError, KeyError, ValueError) as exc:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Active fabric reference is invalid or incompatible: {exc}",
+                ) from exc
+
+            original_boxes = self._map_dense_boxes_to_original(
+                list(anomaly.boxes),
+                scale=features.scale,
+                width=features.original_width,
+                height=features.original_height,
+            )
+            decision = decide_fabric_inspection(
+                image_score=anomaly.image_score,
+                boxes=original_boxes,
+                thresholds=reference.thresholds,
+                localized_score=anomaly.localized_score,
+            )
+            defect_area_ratio = self._box_area_ratio(
+                original_boxes,
+                features.original_width,
+                features.original_height,
+            )
+            inspection_id = str(uuid4())
+            annotated = self.storage.annotated_output_for(inspection_id, image.filename or "upload.jpg")
+            save_annotated_image(stored_upload.absolute_path, original_boxes, annotated.absolute_path)
+
+            inspection = Inspection(
+                id=inspection_id,
+                filename=image.filename or "upload",
+                original_image_path=stored_upload.relative_path,
+                annotated_image_path=annotated.relative_path,
+                content_type=image.content_type,
+                file_size_bytes=stored_upload.file_size_bytes,
+                image_width=image_info.width,
+                image_height=image_info.height,
+                image_mode=image_info.mode,
+                final_result=decision.label,
+                confidence=None,
+                defect_area_ratio=defect_area_ratio,
+                defect_count=len(original_boxes),
+                model_version=reference.reference_id,
+                fabric_id=reference.fabric_id,
+                fabric_name=reference.display_name,
+                reference_id=reference.reference_id,
+                backbone_version=reference.backbone_version,
+                anomaly_score=anomaly.image_score,
+                decision_reason=decision.reason,
+            )
+            defects = self._detected_defects(inspection.id, original_boxes)
+            inspection = crud.create_inspection_with_defects(self.db, inspection, defects)
+            persisted = True
+            pixel_threshold = float(reference.thresholds["pixel_threshold"])
+            return self._to_response(
+                inspection,
+                embedding_summary=EmbeddingSummary(
+                    model_name=extractor.info.architecture,
+                    device=extractor.info.device,
+                    requested_device=self.settings.device,
+                    use_pretrained_weights=extractor.info.use_pretrained_weights,
+                    embedding_dim=extractor.info.feature_dim,
+                    patch_count=int(features.embeddings.shape[0]),
+                    batch_size=1,
+                    model_input_size=int(backbone.get("image_max_size", self.settings.image_max_size)),
+                    l2_normalized=True,
+                ),
+                anomaly_summary=AnomalySummary(
+                    status="scored",
+                    reference_version=reference.reference_id,
+                    faiss_metric="cosine",
+                    threshold=float(reference.thresholds["image_review_threshold"]),
+                    patch_count=int(anomaly.patch_scores.size),
+                    suspicious_patch_count=int((anomaly.patch_scores >= pixel_threshold).sum()),
+                    max_anomaly_score=float(anomaly.patch_scores.max()),
+                    mean_anomaly_score=float(anomaly.patch_scores.mean()),
+                    defect_area_ratio_estimate=defect_area_ratio,
+                ),
+                boxes=self._defect_boxes(original_boxes),
+            )
+        except Exception:
+            if not persisted:
+                self.storage.delete_stored_file(stored_upload.relative_path)
+                if annotated is not None:
+                    self.storage.delete_stored_file(annotated.relative_path)
+            raise
+
     def create_placeholder_inspection(self, image: UploadFile, reference_id: str | None = None) -> InspectionCreateResponse:
         reference_context = self._resolve_reference_context(reference_id)
         try:
@@ -94,6 +228,7 @@ class InspectionService:
                 anomaly_result.raw_result,
                 embedding_result.coordinate_transform,
                 reference_context.min_defect_cluster_patches,
+                embedding_result.prepared_image.processed_rgb,
             )
             defect_area_ratio = self._box_area_ratio(original_boxes, image_info.width, image_info.height)
             classification = (
@@ -155,6 +290,9 @@ class InspectionService:
                     final_result=item.final_result,
                     defect_area_ratio=item.defect_area_ratio,
                     defect_count=item.defect_count,
+                    fabric_id=item.fabric_id,
+                    fabric_name=item.fabric_name,
+                    reference_id=item.reference_id,
                     created_at=item.created_at,
                 )
                 for item in inspections
@@ -178,8 +316,13 @@ class InspectionService:
     ) -> InspectionCreateResponse:
         return InspectionCreateResponse(
             inspection_id=inspection.id,
-            reference_id=reference_id or inspection.model_version,
+            fabric_id=inspection.fabric_id,
+            fabric_name=inspection.fabric_name,
+            reference_id=reference_id or inspection.reference_id or inspection.model_version,
+            backbone_version=inspection.backbone_version,
             final_result=inspection.final_result,
+            anomaly_score=inspection.anomaly_score,
+            reason=inspection.decision_reason,
             confidence=inspection.confidence,
             defect_area_ratio=inspection.defect_area_ratio,
             defect_count=inspection.defect_count,
@@ -202,6 +345,37 @@ class InspectionService:
             model_version=inspection.model_version,
             created_at=inspection.created_at,
         )
+
+    def _map_dense_boxes_to_original(
+        self,
+        boxes: list[MergedBox],
+        *,
+        scale: float,
+        width: int,
+        height: int,
+    ) -> list[MergedBox]:
+        if scale <= 0:
+            raise ValueError("Dense feature scale must be positive")
+        mapped: list[MergedBox] = []
+        for box in boxes:
+            x1 = max(0, min(width, round(box.x / scale)))
+            y1 = max(0, min(height, round(box.y / scale)))
+            x2 = max(x1, min(width, round((box.x + box.w) / scale)))
+            y2 = max(y1, min(height, round((box.y + box.h) / scale)))
+            if x2 <= x1 or y2 <= y1:
+                continue
+            mapped.append(
+                MergedBox(
+                    x=x1,
+                    y=y1,
+                    w=x2 - x1,
+                    h=y2 - y1,
+                    score=box.score,
+                    patch_count=box.patch_count,
+                    label=box.label,
+                )
+            )
+        return mapped
 
     def _image_metadata(self, inspection: Inspection) -> ImageMetadata | None:
         if inspection.image_width is None or inspection.image_height is None or inspection.file_size_bytes is None:
@@ -409,11 +583,25 @@ class InspectionService:
         result: AnomalyDetectionResult | None,
         coordinate_transform: CoordinateTransform,
         min_cluster_patches: int,
+        processed_rgb: np.ndarray | None = None,
     ) -> list[MergedBox]:
         if result is None:
             return []
-        resized_boxes = merge_suspicious_patches(list(result.patch_scores), merge_gap=0)
-        resized_boxes = filter_boxes_by_cluster_size(resized_boxes, min_cluster_patches)
+        patch_scores = list(result.patch_scores)
+        suspicious_ratio = result.suspicious_patch_count / len(patch_scores) if patch_scores else 0.0
+        resized_boxes = []
+        if processed_rgb is not None and suspicious_ratio >= 0.5:
+            resized_boxes = localize_pixel_defects(
+                processed_rgb,
+                anomaly_score=result.max_anomaly_score or 0.0,
+            )
+        if not resized_boxes:
+            resized_boxes = localize_suspicious_patches(
+                patch_scores,
+                image_width=coordinate_transform.resize.output_width,
+                image_height=coordinate_transform.resize.output_height,
+                min_patch_count=min_cluster_patches,
+            )
         if not resized_boxes:
             return []
         mapped: list[MergedBox] = []

@@ -255,6 +255,8 @@ def group_match(group_key: str, row: dict) -> bool:
         return row["fabric_group"] == group_key
     if group_key.startswith("lusitano"):
         return row["dataset_name"] == "lusitano"
+    if group_key == "company_iqc":
+        return row["dataset_name"] == "company_iqc"
     return row["fabric_group"] == group_key
 
 

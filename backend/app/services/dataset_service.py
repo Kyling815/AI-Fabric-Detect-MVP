@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.paths import dataset_paths, resolve_project_path
@@ -103,9 +104,29 @@ class DatasetService:
             for normal_dir in normal_dirs
             for image_path in self.list_images(normal_dir)
         }
-        image_count = _count_files(root, IMAGE_EXTENSIONS)
         normal_count = len(normal_images)
-        defective_count = image_count - normal_count
+        real_images = {
+            image_path
+            for image_path in self.list_images(root)
+            if "fabric_synthetic_testset" not in {part.lower() for part in image_path.relative_to(root).parts}
+        }
+        defective_count = len(real_images - normal_images)
+        synthetic_good = root / "fabric_synthetic_testset"
+        synthetic_normal_count = sum(
+            _count_files(path, IMAGE_EXTENSIONS)
+            for path in synthetic_good.rglob("synthetic_good")
+            if path.is_dir()
+        ) if synthetic_good.exists() else 0
+        synthetic_defect_count = sum(
+            _count_files(path, IMAGE_EXTENSIONS)
+            for path in synthetic_good.rglob("synthetic_defect")
+            if path.is_dir()
+        ) if synthetic_good.exists() else 0
+        synthetic_mask_count = sum(
+            _count_files(path, MASK_EXTENSIONS)
+            for path in synthetic_good.rglob("defect_masks")
+            if path.is_dir()
+        ) if synthetic_good.exists() else 0
         classes = []
         if normal_count:
             classes.append(
@@ -125,6 +146,34 @@ class DatasetService:
                     image_count=defective_count,
                 )
             )
+        if synthetic_normal_count:
+            classes.append(
+                DatasetClassSummary(
+                    name="synthetic_normal_test",
+                    role="normal_test",
+                    path=_path_string(synthetic_good),
+                    image_count=synthetic_normal_count,
+                )
+            )
+        if synthetic_defect_count:
+            classes.append(
+                DatasetClassSummary(
+                    name="synthetic_defective_test",
+                    role="defective_test",
+                    path=_path_string(synthetic_good),
+                    image_count=synthetic_defect_count,
+                )
+            )
+        if synthetic_mask_count:
+            classes.append(
+                DatasetClassSummary(
+                    name="synthetic_defect_masks",
+                    role="mask",
+                    path=_path_string(synthetic_good),
+                    image_count=0,
+                    mask_count=synthetic_mask_count,
+                )
+            )
         return DatasetSummary(
             name="company_iqc",
             display_name="Company IQC Fabric Images",
@@ -134,8 +183,8 @@ class DatasetService:
             normal_paths=[_path_string(path) for path in normal_dirs],
             classes=classes,
             notes=(
-                "Current loose Company images are treated as defective IQC samples. "
-                "Place future normal Company images under a normal/good/nondefects subfolder."
+                "Real good images are reference candidates. Synthetic images are isolated as a stress-test set; "
+                "original provenance copies and masks are excluded from model input counts."
             ),
         )
 
@@ -146,7 +195,7 @@ class DatasetService:
             (
                 path
                 for path in root.rglob("*")
-                if path.is_dir() and path.name.lower().replace("-", "_") in COMPANY_NORMAL_FOLDER_NAMES
+                if path.is_dir() and _is_company_normal_folder(path.name)
             ),
             key=lambda path: str(path).lower(),
         )
@@ -322,3 +371,9 @@ class DatasetService:
             path=_path_string(path),
             image_count=_count_files(path, IMAGE_EXTENSIONS),
         )
+
+
+def _is_company_normal_folder(name: str) -> bool:
+    normalized = re.sub(r"\(\d+\)$", "", name.strip().lower())
+    normalized = re.sub(r"[\s-]+", "_", normalized).strip("_")
+    return normalized in COMPANY_NORMAL_FOLDER_NAMES or normalized.startswith("good_")
