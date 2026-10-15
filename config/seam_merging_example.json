@@ -1,0 +1,8 @@
+{
+  "policy_version": "seam_unapproved_starting_rules_v1",
+  "adjacent_camera_pairs": [["lane_left", "lane_right"]],
+  "minimum_seam_iou": 0.5,
+  "maximum_center_distance_mm": 1.0,
+  "maximum_time_delta_ms": 0.0,
+  "max_observations": 128
+}

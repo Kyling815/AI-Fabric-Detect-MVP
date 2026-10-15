@@ -1,0 +1,280 @@
+{
+  "phase": 7,
+  "date": "2026-10-14",
+  "existing_company_audit": {
+    "phase": 7,
+    "scope": "Company runtime manifests; spot-check adapter_train masks only; no locked image evaluation",
+    "fabrics": [
+      {
+        "fabric_id": "fabric_001",
+        "row_count": 121,
+        "origin_counts": {
+          "real": 61,
+          "synthetic": 60
+        },
+        "masked_origin_counts": {
+          "synthetic": 60
+        },
+        "split_counts": {
+          "reference": 33,
+          "validation": 20,
+          "locked_test": 40,
+          "adapter_train": 28
+        },
+        "legacy_defect_names": {
+          "hole_or_cut": 9,
+          "broken_or_loose_yarn": 9,
+          "scratch_or_abrasion": 9,
+          "stain_or_oil": 9,
+          "crease_or_pressure_line": 6,
+          "foreign_fiber": 6,
+          "texture_distortion": 6,
+          "missing_structure_or_loop": 6
+        },
+        "missing_capture_fields": [
+          "roll_id",
+          "lot_id",
+          "camera_id"
+        ],
+        "binary_pair_spot_checks": [
+          {
+            "sample_id": "2b55220b286ce023",
+            "origin": "synthetic",
+            "shape": [
+              960,
+              1280
+            ],
+            "mapped_class_ids": [
+              0,
+              1
+            ],
+            "geometry_valid": true
+          },
+          {
+            "sample_id": "6bb9c376c9f6faed",
+            "origin": "synthetic",
+            "shape": [
+              960,
+              1280
+            ],
+            "mapped_class_ids": [
+              0,
+              1
+            ],
+            "geometry_valid": true
+          }
+        ]
+      },
+      {
+        "fabric_id": "fabric_002",
+        "row_count": 129,
+        "origin_counts": {
+          "real": 69,
+          "synthetic": 60
+        },
+        "masked_origin_counts": {
+          "synthetic": 60
+        },
+        "split_counts": {
+          "reference": 40,
+          "validation": 22,
+          "locked_test": 40,
+          "adapter_train": 27
+        },
+        "legacy_defect_names": {
+          "hole_or_cut": 9,
+          "broken_or_loose_yarn": 9,
+          "scratch_or_abrasion": 9,
+          "stain_or_oil": 9,
+          "crease_or_pressure_line": 6,
+          "foreign_fiber": 6,
+          "texture_distortion": 6,
+          "missing_structure_or_loop": 6
+        },
+        "missing_capture_fields": [
+          "roll_id",
+          "lot_id",
+          "camera_id"
+        ],
+        "binary_pair_spot_checks": [
+          {
+            "sample_id": "94ffb343d66da84f",
+            "origin": "synthetic",
+            "shape": [
+              960,
+              1280
+            ],
+            "mapped_class_ids": [
+              0,
+              1
+            ],
+            "geometry_valid": true
+          },
+          {
+            "sample_id": "51c6574045c9aee7",
+            "origin": "synthetic",
+            "shape": [
+              960,
+              1280
+            ],
+            "mapped_class_ids": [
+              0,
+              1
+            ],
+            "geometry_valid": true
+          }
+        ]
+      }
+    ],
+    "multiclass_semantic_mapping_inferred": false,
+    "trained_model": false,
+    "production_training_readiness": "UNVERIFIED_REAL_PIXEL_LABELS_AND_CAPTURE_GROUP_METADATA",
+    "note": "All masked Company rows are declared synthetic. Folder lot_001 is not verified acquisition provenance. Existing historic locked entries remain untouched, not fresh holdout. Binary generic defect mapping is explicit, not eight-class ground truth."
+  },
+  "synthetic_pipeline_demo": {
+    "phase": 7,
+    "status": "SYNTHETIC_SOFTWARE_CHECK_ONLY",
+    "taxonomy": [
+      "background",
+      "defect"
+    ],
+    "split": {
+      "assignments": {
+        "demo_1_0": "train",
+        "demo_1_1": "train",
+        "demo_1_2": "train",
+        "demo_2_0": "validation",
+        "demo_2_1": "validation",
+        "demo_2_2": "validation",
+        "demo_0_0": "test",
+        "demo_0_1": "test",
+        "demo_0_2": "test"
+      },
+      "groups": [
+        [
+          "demo_0_0",
+          "demo_0_1",
+          "demo_0_2"
+        ],
+        [
+          "demo_1_0",
+          "demo_1_1",
+          "demo_1_2"
+        ],
+        [
+          "demo_2_0",
+          "demo_2_1",
+          "demo_2_2"
+        ]
+      ],
+      "sample_counts": {
+        "train": 3,
+        "validation": 3,
+        "test": 3,
+        "historical_locked": 0,
+        "excluded": 0
+      },
+      "requested_ratios": {
+        "train": 0.7,
+        "validation": 0.15,
+        "test": 0.15
+      },
+      "warnings": [
+        "Ratios are approximate because entire connected groups are indivisible.",
+        "Original source content is not fully verified where root-source hashes are absent; lineage ids remain caller-declared."
+      ]
+    },
+    "batches": {
+      "train": {
+        "sample_count": 3,
+        "image_shape": [
+          2,
+          3,
+          32,
+          32
+        ],
+        "mask_shape": [
+          2,
+          32,
+          32
+        ],
+        "image_dtype": "torch.float32",
+        "mask_dtype": "torch.int64"
+      },
+      "validation": {
+        "sample_count": 3,
+        "image_shape": [
+          2,
+          3,
+          32,
+          32
+        ],
+        "mask_shape": [
+          2,
+          32,
+          32
+        ],
+        "image_dtype": "torch.float32",
+        "mask_dtype": "torch.int64"
+      },
+      "test": {
+        "sample_count": 3,
+        "image_shape": [
+          2,
+          3,
+          32,
+          32
+        ],
+        "mask_shape": [
+          2,
+          32,
+          32
+        ],
+        "image_dtype": "torch.float32",
+        "mask_dtype": "torch.int64"
+      }
+    },
+    "oracle_metric_self_check": {
+      "confusion_matrix": [
+        [
+          718,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "valid_pixels": 768,
+      "pixel_accuracy": 1,
+      "mean_iou_present": 1,
+      "mean_dice_present": 1,
+      "foreground_mean_iou_present": 1,
+      "foreground_mean_dice_present": 1,
+      "per_class": {
+        "background": {
+          "iou": 1,
+          "dice": 1,
+          "precision": 1,
+          "recall": 1,
+          "target_pixels": 718,
+          "predicted_pixels": 718
+        },
+        "defect": {
+          "iou": 1,
+          "dice": 1,
+          "precision": 1,
+          "recall": 1,
+          "target_pixels": 50,
+          "predicted_pixels": 50
+        }
+      },
+      "absent_class_policy": "undefined metrics are None and excluded from macro means"
+    },
+    "trained_model": false,
+    "production_accuracy_evaluated": false,
+    "dataset_files_modified": false,
+    "note": "Tiny fixtures in temp only. Perfect oracle metric checks arithmetic, not trained model quality."
+  },
+  "production_training_readiness": "UNVERIFIED_REAL_PIXEL_LABELS_AND_CAPTURE_GROUP_METADATA"
+}

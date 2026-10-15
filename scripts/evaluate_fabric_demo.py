@@ -31,6 +31,8 @@ def main() -> None:
     parser.add_argument("--output-dir", default="storage/metadata/fabric_demo_evaluation")
     parser.add_argument("--activate-if-accepted", action="store_true")
     args = parser.parse_args()
+    if args.activate_if_accepted:
+        parser.error("Legacy historical/postmortem activation is disabled. Use Phase18 fresh-test governance and explicit manual approval.")
 
     registry = FabricRegistry()
     backbone = registry.shared_backbone
@@ -57,15 +59,11 @@ def main() -> None:
         "split": args.split,
         "reports": reports,
         "all_accepted": all(report["accepted"] for report in reports),
+        "acceptance_scope": "LEGACY_HISTORICAL_DIAGNOSTIC_NOT_RELEASE_APPROVAL",
+        "release_accepted": False,
     }
     (output_dir / f"{args.split}_evaluation.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
     write_csv(output_dir / f"{args.split}_images.csv", reports)
-    if args.activate_if_accepted:
-        if args.split != "locked_test":
-            raise RuntimeError("Activation requires locked_test evaluation")
-        if not payload["all_accepted"]:
-            raise RuntimeError("References were not activated because acceptance criteria failed")
-        activate(reports)
     print(json.dumps(payload, indent=2))
 
 
@@ -171,17 +169,7 @@ def mask_iou(mask_path: str | None, boxes, width: int, height: int) -> float | N
 
 
 def activate(reports: list[dict]) -> None:
-    path = resolve_project_path(get_settings().fabric_registry_path)
-    registry = json.loads(path.read_text(encoding="utf-8"))
-    for report in reports:
-        fabric = registry["fabrics"][report["fabric_id"]]
-        fabric["status"] = "ACTIVE"
-        fabric["active_reference"] = report["reference_id"]
-        for reference in fabric["references"]:
-            if reference["reference_id"] == report["reference_id"]:
-                reference["status"] = "ACTIVE"
-    registry["updated_at"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
-    path.write_text(json.dumps(registry, indent=2), encoding="utf-8")
+    raise RuntimeError("Legacy activation is disabled: Phase18 fresh locked evidence and manual approval are required")
 
 
 def read_rows(path: Path) -> list[dict]:

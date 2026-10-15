@@ -1,0 +1,77 @@
+{
+  "phase": 1,
+  "date": "2026-10-13",
+  "timezone": "Asia/Bangkok",
+  "parity_cases": [
+    {
+      "fabric_id": "fabric_001",
+      "input": "synthetic_checker",
+      "result": "BAD",
+      "score": 0.36475321650505066,
+      "box_count": 1,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    },
+    {
+      "fabric_id": "fabric_001",
+      "input": "synthetic_scratch",
+      "result": "BAD",
+      "score": 0.46125221252441406,
+      "box_count": 1,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    },
+    {
+      "fabric_id": "fabric_001",
+      "input": "existing_reference_good",
+      "result": "GOOD",
+      "score": 0.19239966571331024,
+      "box_count": 3,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "synthetic_checker",
+      "result": "BAD",
+      "score": 1.224920392036438,
+      "box_count": 1,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "synthetic_scratch",
+      "result": "BAD",
+      "score": 1.2424417734146118,
+      "box_count": 1,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "existing_reference_good",
+      "result": "GOOD",
+      "score": 0.029862500727176666,
+      "box_count": 0,
+      "full_response_equal": true,
+      "annotated_sha256_equal": true
+    }
+  ],
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "scope": "real cached encoder/adapter and v5 FAISS, temporary DB/storage/registry; no locked-test evaluation",
+  "normalized_response_fields": [
+    "inspection_id",
+    "created_at",
+    "original_image_url",
+    "annotated_image_url"
+  ],
+  "checkpoint": "storage/models/shared_dense_adapter_company_v4.pt",
+  "reference_versions": [
+    "fabric_001_ref_v5",
+    "fabric_002_ref_v5"
+  ],
+  "device": "cpu",
+  "method": "Loaded pre-refactor InspectionService from the baseline Git commit into a temporary module; ran old and new services with identical inputs, real cached CNN/adapter and existing FAISS; compared all remaining response fields exactly and annotated PNG SHA-256. Only temporary registry copies enabled fixture references.",
+  "limitations": "Six parity cases verify refactor behavior only. Existing Good input belongs to reference sources, not an unseen test. No fresh locked test, no production accuracy or throughput claim."
+}

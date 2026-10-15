@@ -1,0 +1,6 @@
+{
+  "taxonomy": {"classes": ["background", "defect"], "ignore_index": null},
+  "split": {"train_ratio": 0.7, "validation_ratio": 0.15, "test_ratio": 0.15, "seed": 42, "require_roll_id": true, "group_by_lot": false, "group_by_camera": false},
+  "augmentation": {"enabled": false, "horizontal_flip_probability": 0.5, "vertical_flip_probability": 0.0, "rotate_quarter_turns": true, "brightness_delta": 0.1, "contrast_range": [0.9, 1.1]},
+  "training": {"enabled": false, "architecture": "unet_resnet18", "share_anomaly_encoder": false, "image_size": [256, 256], "batch_size": 4, "epochs": 30, "encoder_lr": 0.00003, "decoder_lr": 0.0003, "optimizer": "adamw", "weight_decay": 0.01, "loss": "cross_entropy_dice", "focal_optional": false, "early_stopping_patience": 8, "amp_if_cuda": true, "allow_synthetic": false}
+}

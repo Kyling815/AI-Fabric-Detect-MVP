@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "policy_version": "UNAPPROVED_REQUIRES_OWNER_DEFINED_CRITERIA",
+  "approved_by": null,
+  "approved_at": null,
+  "valid_until": null,
+  "criteria": {
+    "defect_recall": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "false_negatives": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "underkill": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "false_positive_rate": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "overkill": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "precision": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "f1": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "segmentation_iou": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "segmentation_dice": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "unknown_defect_recall": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "false_alarms_per_100m": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "missed_defects_per_100m": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "p50_latency_ms": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "p95_latency_ms": {
+      "direction": "max",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    },
+    "throughput_images_per_second": {
+      "direction": "min",
+      "threshold": null,
+      "applicable": true,
+      "not_applicable_reason": null
+    }
+  },
+  "per_class_recall": {}
+}

@@ -1,0 +1,966 @@
+{
+  "phase": 15,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "status": "WAITING_FOR_USER_REVIEW",
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Opt-in CPU-verified runtime instrumentation and bounded offline scheduling only; not GPU performance, factory integration or model quality.",
+  "next_phase_started": false,
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "implementation": [
+    "RuntimeProfiler",
+    "RuntimeScheduler",
+    "read-only offline CPU benchmark"
+  ],
+  "semantics": {
+    "default_runtime_profiling_enabled": false,
+    "public_http_schema_changed": false,
+    "database_schema_changed": false,
+    "stage_accounting": "Exclusive nested perf_counter_ns spans; preprocessing, segmentation, anomaly, fusion, postprocessing. Sum plus uninstrumented_ms equals total_ms up to floating-point rounding.",
+    "total_boundary": "Synchronous InspectionService._inspect_fabric core or caller-owned scheduled callable only. API upload/capture pre-screening/image-info, annotation, storage, SQLite and HTTP overhead excluded.",
+    "queue_wait": "Admission to worker acquiring the shared resource gate, excludes rejected-admission retry time; outside total_ms. Zero for synchronous calls.",
+    "disabled_branch": "Zero stage_calls means NOT EXECUTED; zero latency does not mean a free model.",
+    "error_accounting": "stage_errors counts thrown exceptions only. Handled shadow/fusion failure diagnostic values stay in InspectionResult; a completed callable can be succeeded=true while a branch is degraded.",
+    "scheduler": "Explicit opt-in offline callables, bounded FIFO pending queue with up to workers dequeued/in-flight. Full queue raises SchedulerBusy before ownership transfer. No silent drop, no automatic retries.",
+    "ordering": "FIFO dequeue only. With multiple workers resource-lock execution/completion order is not guaranteed. Consume futures in source order when required.",
+    "resource_gate": "Full-job serialization across default scheduler instances in one Python process; not cross-process, not direct HTTP callers. allow_concurrent_jobs=true explicitly bypasses the gate.",
+    "lifecycle": "Graceful drain, queued/pre-start cancellation accounting, running native work not preemptible. shutdown(wait=false) requests drain, not cancellation.",
+    "task_ownership": "Caller owns task/model/tensor/context lifetime; never share a SQLAlchemy Session. Do not wait inside a task for another gated task (deadlock).",
+    "timing_device": "CPU verified. CUDA path uses device-wide synchronization before/after spans, tested with mocks only; not GPU kernel time or uncontended latency.",
+    "service_profile": "Internal InspectionResult.runtime_profile plus best-effort timing-only audit logger when flag enabled. Existing external responses and QC unchanged. If an outer scheduler profiler exists, it owns the complete profile."
+  },
+  "tests": {
+    "phase15": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_runtime_profiling.py tests/test_runtime_scheduler.py tests/test_runtime_profiling_integration.py -q",
+      "passed": 64,
+      "warnings": 1,
+      "seconds": 9.48
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1617,
+      "warnings": 1,
+      "pytest_seconds": 180.53,
+      "exit_code": 0,
+      "previous_suite_count": 1553,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true
+    },
+    "existing_tests_modified": false,
+    "existing_tests_broken": false,
+    "new_test_failures": [],
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "warning": "Existing FAISS loader NumPy private-namespace deprecation."
+  },
+  "created_files": [
+    "backend/app/core/runtime_profiling.py",
+    "backend/app/services/runtime_scheduler.py",
+    "scripts/check_phase15_runtime.py",
+    "tests/test_runtime_profiling.py",
+    "tests/test_runtime_profiling_integration.py",
+    "tests/test_runtime_scheduler.py",
+    "docs/implementation/phase_15_runtime_profiling.md",
+    "docs/implementation/phase_15_benchmark_report.json"
+  ],
+  "modified_existing_files": [
+    ".env.example",
+    "backend/app/ai/current_anomaly.py",
+    "backend/app/ai/dense_anomaly.py",
+    "backend/app/ai/dense_feature_extractor.py",
+    "backend/app/core/config.py",
+    "backend/app/core/inspection_contracts.py",
+    "backend/app/services/inspection_service.py"
+  ],
+  "existing_files_audited": 349,
+  "unrelated_existing_files_unchanged": 342,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "branch": "main",
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 9,
+      "insertions": 510,
+      "deletions": 132
+    },
+    "note": "Cumulative tracked diff includes prior phases/user binary and excludes new/untracked files; phase-only inventory is listed separately."
+  },
+  "production_runtime_scheduling_integrated": false,
+  "production_registry_modified": false,
+  "production_model_training_performed": false,
+  "real_data_accuracy_evaluated": false,
+  "gpu_contention_measured": false,
+  "onnx_or_tensorrt_started": false,
+  "benchmark_command": ".\\.venv\\Scripts\\python.exe scripts/check_phase15_runtime.py --benchmark --iterations 12 --warmups 3 --tiles 8 --size 64",
+  "benchmark_notes": [
+    "Measured after regression finished; no benchmark/test-suite overlap in this recorded run.",
+    "cold_profile is the first full pipeline call AFTER model/index setup, not process cold start; the anomaly encoder already ran to construct the toy bank.",
+    "Percentiles from only 12 samples are descriptive, not production SLO estimates; each stage percentile is independent, so stage p50 values need not sum to total p50.",
+    "CPU concurrent pair and sequential pair were actually timed. Their medians are not a transferable speedup estimate; probes are short/ordered and include dispatch/barrier overhead.",
+    "Benchmark is in-process. Existing Phase9 subprocess initialization, checkpoint validation, transport and process contention are excluded.",
+    "GPU contention/VRAM/industrial throughput remain NOT_MEASURED. A real candidate, representative reference and CUDA hardware must be profiled before any GPU concurrency decision."
+  ],
+  "benchmark": {
+    "phase": 15,
+    "measured_at_utc": "2026-10-15T03:49:05.079163+00:00",
+    "scope": "OFFLINE_CPU_RUNTIME_ONLY_SYNTHETIC_INPUT_UNTRAINED_SEGMENTATION_TOY_REFERENCE",
+    "environment": {
+      "python": "3.11.9",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+      "torch": "2.5.1+cpu",
+      "torch_threads": 1,
+      "faiss_threads": 1,
+      "cuda_available": false,
+      "cuda_build": null
+    },
+    "parameters": {
+      "batch_size": 1,
+      "tile_shape_rgb": [
+        64,
+        64,
+        3
+      ],
+      "warmups": 3,
+      "iterations": 12,
+      "multiple_tiles": 8,
+      "device": "cpu"
+    },
+    "models": {
+      "anomaly_backbone": {
+        "backbone_version": "shared_resnet18_imagenet1k_dense_adapter_company_v4",
+        "architecture": "resnet18_layer2_layer3_dense+shared_projection_adapter",
+        "device": "cpu",
+        "use_pretrained_weights": true,
+        "feature_dim": 128,
+        "feature_stride": 8
+      },
+      "encoder_cached_sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec",
+      "adapter_sha256": "0b455192d0eae4c5aa1725b12a7c16dffb691ee5a81d44039dbf1de29904858c",
+      "segmentation": "independent_resnet18_unet_v1; cached encoder, untrained standard decoder",
+      "segmentation_initialized_state_sha256": "ca9df009e1bad788bbb798f77be60ec7ff05854deee2cbcd17cc77f9daba7d85",
+      "toy_reference_vectors": 64
+    },
+    "setup_ms": 341.6444,
+    "cold_profile": {
+      "preprocessing_ms": 0.4658,
+      "segmentation_ms": 13.0437,
+      "anomaly_ms": 10.3838,
+      "fusion_ms": 0.6884,
+      "postprocessing_ms": 0.1021,
+      "total_ms": 24.7948,
+      "queue_wait_ms": 0,
+      "uninstrumented_ms": 0.111,
+      "stage_calls": {
+        "preprocessing": 2,
+        "segmentation": 1,
+        "anomaly": 2,
+        "fusion": 1,
+        "postprocessing": 3
+      },
+      "stage_errors": {
+        "preprocessing": 0,
+        "segmentation": 0,
+        "anomaly": 0,
+        "fusion": 0,
+        "postprocessing": 0
+      },
+      "device": "cpu",
+      "timing_mode": "host_wall_cpu",
+      "succeeded": true
+    },
+    "warm_stage_ms": {
+      "preprocessing_ms": {
+        "count": 12,
+        "p50": 0.52915,
+        "p95": 0.6817949999999999,
+        "min": 0.4979,
+        "max": 0.7462
+      },
+      "segmentation_ms": {
+        "count": 12,
+        "p50": 23.89555,
+        "p95": 32.94270999999999,
+        "min": 22.7205,
+        "max": 36.9235
+      },
+      "anomaly_ms": {
+        "count": 12,
+        "p50": 10.668949999999999,
+        "p95": 15.635834999999998,
+        "min": 10.2075,
+        "max": 17.132
+      },
+      "fusion_ms": {
+        "count": 12,
+        "p50": 0.57975,
+        "p95": 0.66747,
+        "min": 0.5476,
+        "max": 0.7063
+      },
+      "postprocessing_ms": {
+        "count": 12,
+        "p50": 0.12505,
+        "p95": 0.136685,
+        "min": 0.1211,
+        "max": 0.1418
+      },
+      "total_ms": {
+        "count": 12,
+        "p50": 36.15935,
+        "p95": 48.35213999999999,
+        "min": 34.8866,
+        "max": 55.6359
+      },
+      "queue_wait_ms": {
+        "count": 12,
+        "p50": 0,
+        "p95": 0,
+        "min": 0,
+        "max": 0
+      },
+      "uninstrumented_ms": {
+        "count": 12,
+        "p50": 0.08765,
+        "p95": 0.09913,
+        "min": 0.0819,
+        "max": 0.1032
+      }
+    },
+    "warm_profiles": [
+      {
+        "preprocessing_ms": 0.5647,
+        "segmentation_ms": 26.6435,
+        "anomaly_ms": 14.4117,
+        "fusion_ms": 0.5624,
+        "postprocessing_ms": 0.1238,
+        "total_ms": 42.3927,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0866,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5189,
+        "segmentation_ms": 26.1815,
+        "anomaly_ms": 10.5674,
+        "fusion_ms": 0.5773,
+        "postprocessing_ms": 0.1252,
+        "total_ms": 38.0558,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0855,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.6291,
+        "segmentation_ms": 36.9235,
+        "anomaly_ms": 17.132,
+        "fusion_ms": 0.7063,
+        "postprocessing_ms": 0.1418,
+        "total_ms": 55.6359,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.1032,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5477,
+        "segmentation_ms": 26.4531,
+        "anomaly_ms": 10.5037,
+        "fusion_ms": 0.5822,
+        "postprocessing_ms": 0.1247,
+        "total_ms": 38.3063,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0949,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5111,
+        "segmentation_ms": 22.9995,
+        "anomaly_ms": 10.6244,
+        "fusion_ms": 0.5476,
+        "postprocessing_ms": 0.1221,
+        "total_ms": 34.8866,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0819,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5067,
+        "segmentation_ms": 22.7205,
+        "anomaly_ms": 11.0402,
+        "fusion_ms": 0.5639,
+        "postprocessing_ms": 0.1211,
+        "total_ms": 35.0345,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0821,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.7462,
+        "segmentation_ms": 24.0142,
+        "anomaly_ms": 10.2573,
+        "fusion_ms": 0.5679,
+        "postprocessing_ms": 0.1224,
+        "total_ms": 35.8038,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0958,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5003,
+        "segmentation_ms": 29.6857,
+        "anomaly_ms": 10.2075,
+        "fusion_ms": 0.6356,
+        "postprocessing_ms": 0.1273,
+        "total_ms": 41.243,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0866,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.582,
+        "segmentation_ms": 23.7737,
+        "anomaly_ms": 10.7135,
+        "fusion_ms": 0.5769,
+        "postprocessing_ms": 0.1249,
+        "total_ms": 35.8655,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0945,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.4979,
+        "segmentation_ms": 23.7769,
+        "anomaly_ms": 11.3215,
+        "fusion_ms": 0.6357,
+        "postprocessing_ms": 0.1325,
+        "total_ms": 36.4532,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0887,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5257,
+        "segmentation_ms": 23.3774,
+        "anomaly_ms": 10.4949,
+        "fusion_ms": 0.6015,
+        "postprocessing_ms": 0.1285,
+        "total_ms": 35.214,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.086,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      },
+      {
+        "preprocessing_ms": 0.5326,
+        "segmentation_ms": 23.4902,
+        "anomaly_ms": 10.786,
+        "fusion_ms": 0.5974,
+        "postprocessing_ms": 0.127,
+        "total_ms": 35.6243,
+        "queue_wait_ms": 0,
+        "uninstrumented_ms": 0.0911,
+        "stage_calls": {
+          "preprocessing": 2,
+          "segmentation": 1,
+          "anomaly": 2,
+          "fusion": 1,
+          "postprocessing": 3
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 0,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": true
+      }
+    ],
+    "output_parity": "PASS",
+    "cpu_contention": {
+      "raw_samples": {
+        "segmentation_alone_ms": [
+          23.3574,
+          22.8598,
+          23.1231,
+          26.5192,
+          23.6022,
+          23.8506,
+          24.0557,
+          23.5386,
+          23.7049,
+          23.8502,
+          23.8423,
+          25.64
+        ],
+        "anomaly_alone_ms": [
+          11.2305,
+          9.3864,
+          11.3325,
+          15.3512,
+          11.0913,
+          11.5745,
+          11.0542,
+          11.6815,
+          11.076,
+          11.1657,
+          11.0259,
+          10.8158
+        ],
+        "sequential_pair_ms": [
+          33.4524,
+          32.7886,
+          35.2489,
+          39.1926,
+          35.541,
+          34.4709,
+          36.3241,
+          39.2875,
+          35.3952,
+          35.9477,
+          38.8689,
+          40.3306
+        ],
+        "concurrent_pair_ms": [
+          25.9745,
+          25.5022,
+          27.8763,
+          26.5006,
+          27.3429,
+          25.5062,
+          26.8174,
+          27.502,
+          26.7752,
+          28.1982,
+          30.7462,
+          27.835
+        ]
+      },
+      "summary": {
+        "segmentation_alone_ms": {
+          "count": 12,
+          "p50": 23.773600000000002,
+          "p95": 26.03564,
+          "min": 22.8598,
+          "max": 26.5192
+        },
+        "anomaly_alone_ms": {
+          "count": 12,
+          "p50": 11.128499999999999,
+          "p95": 13.332864999999998,
+          "min": 9.3864,
+          "max": 15.3512
+        },
+        "sequential_pair_ms": {
+          "count": 12,
+          "p50": 35.74435,
+          "p95": 39.756895,
+          "min": 32.7886,
+          "max": 40.3306
+        },
+        "concurrent_pair_ms": {
+          "count": 12,
+          "p50": 27.08015,
+          "p95": 29.3448,
+          "min": 25.5022,
+          "max": 30.7462
+        }
+      },
+      "note": "Actual overlapping independent CNN probes; includes dispatch/barrier overhead, no GPU inference."
+    },
+    "multiple_tile_scheduler": {
+      "snapshot": {
+        "accepted": 8,
+        "completed": 8,
+        "failed": 0,
+        "cancelled": 0,
+        "rejected": 0,
+        "running": 0,
+        "pending": 0,
+        "closed": true,
+        "max_pending": 8,
+        "workers": 2,
+        "allow_concurrent_jobs": false
+      },
+      "wall_ms_including_startup_shutdown": 318.9532,
+      "tiles_per_second": 25.082049654933705,
+      "profiles": [
+        {
+          "preprocessing_ms": 0.6405,
+          "segmentation_ms": 29.6778,
+          "anomaly_ms": 14.3401,
+          "fusion_ms": 0.7302,
+          "postprocessing_ms": 0.1328,
+          "total_ms": 45.6174,
+          "queue_wait_ms": 0.0787,
+          "uninstrumented_ms": 0.096,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.5753,
+          "segmentation_ms": 24.4424,
+          "anomaly_ms": 12.1976,
+          "fusion_ms": 0.7271,
+          "postprocessing_ms": 0.1469,
+          "total_ms": 38.1904,
+          "queue_wait_ms": 45.7975,
+          "uninstrumented_ms": 0.1011,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.5353,
+          "segmentation_ms": 27.6054,
+          "anomaly_ms": 10.4119,
+          "fusion_ms": 0.5501,
+          "postprocessing_ms": 0.1302,
+          "total_ms": 39.3196,
+          "queue_wait_ms": 84.1124,
+          "uninstrumented_ms": 0.0867,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.606,
+          "segmentation_ms": 28.2773,
+          "anomaly_ms": 11.1899,
+          "fusion_ms": 0.6057,
+          "postprocessing_ms": 0.1233,
+          "total_ms": 40.8873,
+          "queue_wait_ms": 123.5554,
+          "uninstrumented_ms": 0.0851,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.4974,
+          "segmentation_ms": 27.3111,
+          "anomaly_ms": 12.5704,
+          "fusion_ms": 0.5702,
+          "postprocessing_ms": 0.1382,
+          "total_ms": 41.1722,
+          "queue_wait_ms": 276.4234,
+          "uninstrumented_ms": 0.0849,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.9595,
+          "segmentation_ms": 23.689,
+          "anomaly_ms": 10.941,
+          "fusion_ms": 0.5642,
+          "postprocessing_ms": 0.1234,
+          "total_ms": 36.3706,
+          "queue_wait_ms": 164.5455,
+          "uninstrumented_ms": 0.0935,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.4937,
+          "segmentation_ms": 23.2003,
+          "anomaly_ms": 10.2951,
+          "fusion_ms": 0.5767,
+          "postprocessing_ms": 0.1235,
+          "total_ms": 34.7755,
+          "queue_wait_ms": 200.9831,
+          "uninstrumented_ms": 0.0862,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        },
+        {
+          "preprocessing_ms": 0.5105,
+          "segmentation_ms": 26.6771,
+          "anomaly_ms": 12.5262,
+          "fusion_ms": 0.5619,
+          "postprocessing_ms": 0.1299,
+          "total_ms": 40.4876,
+          "queue_wait_ms": 235.8373,
+          "uninstrumented_ms": 0.082,
+          "stage_calls": {
+            "preprocessing": 2,
+            "segmentation": 1,
+            "anomaly": 2,
+            "fusion": 1,
+            "postprocessing": 3
+          },
+          "stage_errors": {
+            "preprocessing": 0,
+            "segmentation": 0,
+            "anomaly": 0,
+            "fusion": 0,
+            "postprocessing": 0
+          },
+          "device": "cpu",
+          "timing_mode": "host_wall_cpu",
+          "succeeded": true
+        }
+      ],
+      "policy": "2 workers, process-local gate serializes full jobs; queue/resource wait measured together"
+    },
+    "queue_pressure_and_failure": {
+      "admission_rejected": true,
+      "snapshot": {
+        "accepted": 2,
+        "completed": 2,
+        "failed": 1,
+        "cancelled": 0,
+        "rejected": 1,
+        "running": 0,
+        "pending": 0,
+        "closed": true,
+        "max_pending": 1,
+        "workers": 1,
+        "allow_concurrent_jobs": false
+      },
+      "failed_job_error_type": "RuntimeError",
+      "failed_profile": {
+        "preprocessing_ms": 0,
+        "segmentation_ms": 0.0102,
+        "anomaly_ms": 0,
+        "fusion_ms": 0,
+        "postprocessing_ms": 0,
+        "total_ms": 0.0281,
+        "queue_wait_ms": 40.1188,
+        "uninstrumented_ms": 0.0179,
+        "stage_calls": {
+          "preprocessing": 0,
+          "segmentation": 1,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "stage_errors": {
+          "preprocessing": 0,
+          "segmentation": 1,
+          "anomaly": 0,
+          "fusion": 0,
+          "postprocessing": 0
+        },
+        "device": "cpu",
+        "timing_mode": "host_wall_cpu",
+        "succeeded": false
+      }
+    },
+    "gpu_contention": {
+      "status": "NOT_MEASURED",
+      "reason": "CPU benchmark only; no CUDA hardware tested"
+    },
+    "limitations": [
+      "No real segmentation checkpoint or factory reference; no accuracy evaluation",
+      "64px default toy tiles and short ordered probes cannot predict line speed or production p95",
+      "In-process model timings exclude Phase9 subprocess startup/checkpoint validation and mask transport",
+      "Upload/annotation/DB/HTTP, camera I/O, PLC, VRAM and long-duration load not benchmarked"
+    ],
+    "production_activation": false,
+    "next_phase_started": false
+  }
+}

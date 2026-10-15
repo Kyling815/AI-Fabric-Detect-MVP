@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "mode": "period_aware",
+  "confidence_threshold": 0.65,
+  "motif_scales": [1, 2, 4],
+  "fallback_kernels": [3, 5, 7],
+  "max_kernel": 31,
+  "fusion": "mean"
+}

@@ -1,0 +1,135 @@
+{
+  "phase": 9,
+  "date": "2026-10-14",
+  "status": "SHADOW_INFRASTRUCTURE_VERIFIED_DEFAULT_OFF",
+  "baseline_tests": 725,
+  "new_tests": 109,
+  "final_regression": {
+    "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+    "passed": 834,
+    "warnings": 1,
+    "pytest_seconds": 136,
+    "frontend_build": "PASS",
+    "smoke_assertions": 77,
+    "exit_code": 0
+  },
+  "synthetic_demo": {
+    "phase": 9,
+    "status": "SYNTHETIC_SOFTWARE_CHECK_ONLY",
+    "observed": {
+      "status": "observed",
+      "reason": "shadow_only",
+      "mode": "shadow",
+      "requested_model_version": "phase9_tiny_synthetic_v1",
+      "model_version": "phase9_tiny_synthetic_v1",
+      "checkpoint_sha256": "37ccc02f838ea54534ababb6031d0bfd05b0a9dc3cd43a93ba6edd6ca836e935",
+      "synthetic_checkpoint": true,
+      "elapsed_ms": 4125,
+      "original_shape": [
+        24,
+        32
+      ],
+      "mask_shape": [
+        32,
+        32
+      ],
+      "mask_coordinate_frame": "model_grid",
+      "taxonomy": [
+        "background",
+        "defect"
+      ],
+      "classes": [
+        {
+          "name": "background",
+          "predicted_pixels": 27,
+          "mean_class_probability": 0.4501396715641022,
+          "mean_winning_confidence": 0.5070981383323669
+        },
+        {
+          "name": "defect",
+          "predicted_pixels": 997,
+          "mean_class_probability": 0.5498603582382202,
+          "mean_winning_confidence": 0.5514028668403625
+        }
+      ],
+      "mask_sha256": "f0db36d06aba0211309d96ae5c8815569ac9910763129ecd3401b614e294e932",
+      "mask_rle_omitted": false,
+      "confidence_calibrated": false,
+      "affects_qc": false
+    },
+    "deterministic_mask_across_workers": true,
+    "timeout": {
+      "status": "timeout",
+      "reason": "worker_timeout",
+      "mode": "shadow",
+      "requested_model_version": "phase9_tiny_synthetic_v1",
+      "model_version": null,
+      "checkpoint_sha256": null,
+      "synthetic_checkpoint": null,
+      "elapsed_ms": 46.999999998661224,
+      "original_shape": null,
+      "mask_shape": null,
+      "mask_coordinate_frame": "model_grid",
+      "taxonomy": [],
+      "classes": [],
+      "mask_sha256": null,
+      "mask_rle_omitted": false,
+      "confidence_calibrated": false,
+      "affects_qc": false
+    },
+    "unavailable": {
+      "status": "unavailable",
+      "reason": "checkpoint_missing",
+      "mode": "shadow",
+      "requested_model_version": null,
+      "model_version": null,
+      "checkpoint_sha256": null,
+      "synthetic_checkpoint": null,
+      "elapsed_ms": 0,
+      "original_shape": null,
+      "mask_shape": null,
+      "mask_coordinate_frame": "model_grid",
+      "taxonomy": [],
+      "classes": [],
+      "mask_sha256": null,
+      "mask_rle_omitted": false,
+      "confidence_calibrated": false,
+      "affects_qc": false
+    },
+    "artifacts_persisted": false,
+    "production_model_created": false,
+    "production_accuracy_evaluated": false,
+    "registry_modified": false,
+    "public_response_schema_modified": false,
+    "qc_integration": false,
+    "note": "Tiny temporary pretrained synthetic checkpoint only. API/QC parity is checked separately by golden integration tests; no fusion, physical localization or production accuracy claim."
+  },
+  "public_http_schema_changed": false,
+  "qc_uses_shadow": false,
+  "default_enabled": false,
+  "modified_existing_files": [
+    ".env.example",
+    "backend/app/core/config.py",
+    "backend/app/core/inspection_contracts.py",
+    "backend/app/services/inspection_service.py"
+  ],
+  "existing_files_audited": 280,
+  "unrelated_existing_files_unchanged": 276,
+  "protected_artifacts_unchanged": 55,
+  "protected_scope_counts": {
+    "storage": 311,
+    "data": 643,
+    "user_files": 10,
+    "torch_checkpoints": 3
+  },
+  "production_registry_modified": false,
+  "production_checkpoint_created": false,
+  "production_model_quality_verified": false,
+  "production_training_readiness": "UNVERIFIED_REAL_PIXEL_LABELS_AND_CAPTURE_GROUP_METADATA",
+  "limitations": [
+    "CPU-only disposable worker; no throughput SLA or hard-real-time guarantee.",
+    "Only trusted local pinned checkpoints; not an OS sandbox. Torch 2.5.1 retained without upgrades.",
+    "Diagnostics internal/log-only, not durable DB history. No fusion or physical coordinate mapping.",
+    "Per-server-process worker capacity is quarantined if OS cleanup cannot confirm child exit. Operator restart required."
+  ]
+}

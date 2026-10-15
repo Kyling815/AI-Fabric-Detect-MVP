@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "distance_metric": "current",
+  "coreset_ratio": 1.0,
+  "selector": "seeded_random",
+  "random_seed": 42
+}

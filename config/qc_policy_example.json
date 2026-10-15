@@ -1,0 +1,8 @@
+{
+  "policy_version": "qc_unapproved_starting_policy_v1",
+  "allowed_fabric_ids": [],
+  "known_rules": [],
+  "unknown_high_action": "NEEDS_REVIEW",
+  "allow_synthetic_evidence": false,
+  "allow_uncalibrated_supervised": false
+}

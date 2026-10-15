@@ -1,0 +1,1063 @@
+{
+  "phase": 6,
+  "scope": "cached CPU CNN/adapter, synthetic pooling ablations, v5 baseline-only queries; new memories in temp",
+  "feature_cases": [
+    {
+      "input": "checker",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "checker",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.004403224214911461
+    },
+    {
+      "input": "checker",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "period_aware",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            11,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": {
+        "period_x_px": 16,
+        "period_y_px": 24,
+        "confidence": 0.9995867170301053,
+        "is_periodic": true,
+        "confidence_x": 0.9995867170301053,
+        "confidence_y": 0.9979638832945014,
+        "reason": null
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.003613215871155262
+    },
+    {
+      "input": "dots",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "dots",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.02211432158946991
+    },
+    {
+      "input": "dots",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "period_aware",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            11,
+            9
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": {
+        "period_x_px": 20,
+        "period_y_px": 24,
+        "confidence": 0.9993806460744714,
+        "is_periodic": true,
+        "confidence_x": 0.9993806460744714,
+        "confidence_y": 0.9986591174527284,
+        "reason": null
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.01743737794458866
+    },
+    {
+      "input": "stripes",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "stripes",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.007048831786960363
+    },
+    {
+      "input": "stripes",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "low_or_incomplete_period_confidence"
+      },
+      "observed_period": {
+        "period_x_px": 16,
+        "period_y_px": null,
+        "confidence": 0.9995867170301052,
+        "is_periodic": true,
+        "confidence_x": 0.9995867170301052,
+        "confidence_y": 0,
+        "reason": "one_axis_only"
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.007048831786960363
+    },
+    {
+      "input": "uniform",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "uniform",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.007511954288929701
+    },
+    {
+      "input": "uniform",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "low_or_incomplete_period_confidence"
+      },
+      "observed_period": {
+        "period_x_px": null,
+        "period_y_px": null,
+        "confidence": 0,
+        "is_periodic": false,
+        "confidence_x": 0,
+        "confidence_y": 0,
+        "reason": "low_periodicity_confidence"
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.007511954288929701
+    },
+    {
+      "input": "noise",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "noise",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.005296285729855299
+    },
+    {
+      "input": "noise",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "low_or_incomplete_period_confidence"
+      },
+      "observed_period": {
+        "period_x_px": null,
+        "period_y_px": null,
+        "confidence": 0,
+        "is_periodic": false,
+        "confidence_x": 0,
+        "confidence_y": 0,
+        "reason": "low_periodicity_confidence"
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.005296285729855299
+    },
+    {
+      "input": "stretch",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        768,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "stretch",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        768,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.0022107374388724566
+    },
+    {
+      "input": "stretch",
+      "branch": "period_aware",
+      "embedding_shape": [
+        768,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "period_aware",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            9,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": {
+        "period_x_px": 24,
+        "period_y_px": 30,
+        "confidence": 0.999586721518732,
+        "is_periodic": true,
+        "confidence_x": 0.999586721518732,
+        "confidence_y": 0.997963901015493,
+        "reason": null
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.001661652117036283
+    },
+    {
+      "input": "lighting",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "lighting",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.004002835601568222
+    },
+    {
+      "input": "lighting",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "period_aware",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            11,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": {
+        "period_x_px": 16,
+        "period_y_px": 24,
+        "confidence": 0.999849786388409,
+        "is_periodic": true,
+        "confidence_x": 0.999849786388409,
+        "confidence_y": 0.997944966441868,
+        "reason": null
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.003242413280531764
+    },
+    {
+      "input": "rotate",
+      "branch": "baseline_off",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "baseline",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ]
+        ],
+        "fallback_reason": null
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": true,
+      "geometry_signature": "8d45b7d75bf5b6103ca76249f91765e826ddbac59452fc4136e6699255e6f520",
+      "mean_abs_embedding_difference_from_baseline": 0
+    },
+    {
+      "input": "rotate",
+      "branch": "fixed_multiscale",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "fixed_multiscale_mode"
+      },
+      "observed_period": null,
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "d6923d70d64da8a8b0b515ca5c09fd200e9d77b29ef6489dac223a82ea0a14d8",
+      "mean_abs_embedding_difference_from_baseline": 0.01613948866724968
+    },
+    {
+      "input": "rotate",
+      "branch": "period_aware",
+      "embedding_shape": [
+        928,
+        128
+      ],
+      "pooling_plan": {
+        "representation": "fixed_multiscale",
+        "layer2_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "layer3_kernels": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "fallback_reason": "low_or_incomplete_period_confidence"
+      },
+      "observed_period": {
+        "period_x_px": null,
+        "period_y_px": null,
+        "confidence": 0.5282146487411457,
+        "is_periodic": false,
+        "confidence_x": 0.47640159187741304,
+        "confidence_y": 0.5282146487411457,
+        "reason": "low_periodicity_confidence"
+      },
+      "repeat_embeddings_equal": true,
+      "baseline_embedding_equal": null,
+      "geometry_signature": "363ec57f0794a02dc6ceb976444934475a11a775dc2ac9dd614a2d2f23fea1fa",
+      "mean_abs_embedding_difference_from_baseline": 0.01613948866724968
+    }
+  ],
+  "baseline_bank_parity": [
+    {
+      "fabric_id": "fabric_001",
+      "baseline_OFF_scores_equal": true,
+      "baseline_OFF_boxes_equal": true,
+      "old_bank_used_with_experimental_geometry": false
+    },
+    {
+      "fabric_id": "fabric_002",
+      "baseline_OFF_scores_equal": true,
+      "baseline_OFF_boxes_equal": true,
+      "old_bank_used_with_experimental_geometry": false
+    }
+  ],
+  "new_geometry_memories": [
+    {
+      "branch": "baseline_off",
+      "feature_dim": 128,
+      "reload_scores_equal": true,
+      "same_dim_wrong_geometry_rejected": true,
+      "status": "NOT_CALIBRATED"
+    },
+    {
+      "branch": "fixed_multiscale",
+      "feature_dim": 128,
+      "reload_scores_equal": true,
+      "same_dim_wrong_geometry_rejected": true,
+      "status": "NOT_CALIBRATED"
+    },
+    {
+      "branch": "period_aware",
+      "feature_dim": 128,
+      "reload_scores_equal": true,
+      "same_dim_wrong_geometry_rejected": true,
+      "status": "NOT_CALIBRATED"
+    }
+  ],
+  "real_evaluation_performed": false,
+  "improvement_status": "UNVERIFIED_NO_INDEPENDENT_EVALUATION",
+  "limitations": "Embedding differences/retrieval verify software only. No accuracy or throughput improvement claim. Adapter was not retrained; no old bank queried with changed geometry.",
+  "date": "2026-10-14"
+}

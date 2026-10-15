@@ -8,6 +8,7 @@ import numpy as np
 from backend.app.ai.bbox import MergedBox
 from backend.app.ai.faiss_index import FaissIndexStore
 from backend.app.ai.patching import PatchBox
+from backend.app.core.runtime_profiling import runtime_stage
 
 
 CORE_LOGIC_VERSION = "dense_anomaly_v2"
@@ -56,13 +57,14 @@ class DenseReferenceDetector:
         localized_score = localized_anomaly_score(patch_scores)
         anomaly_map = patch_scores.reshape(grid_rows, grid_cols)
         pixel_threshold = resolve_pixel_threshold(anomaly_map, effective)
-        localized = localize_anomaly_map(
-            anomaly_map,
-            image_width=image_width,
-            image_height=image_height,
-            pixel_threshold=pixel_threshold,
-            minimum_defect_area=int(effective.get("minimum_defect_area", 1)),
-        )
+        with runtime_stage("postprocessing"):
+            localized = localize_anomaly_map(
+                anomaly_map,
+                image_width=image_width,
+                image_height=image_height,
+                pixel_threshold=pixel_threshold,
+                minimum_defect_area=int(effective.get("minimum_defect_area", 1)),
+            )
         return DenseAnomalyResult(
             patch_scores=patch_scores,
             image_score=image_score,

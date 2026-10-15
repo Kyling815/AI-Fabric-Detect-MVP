@@ -1,0 +1,13 @@
+{
+  "mode": "shadow",
+  "checkpoint_path": "",
+  "checkpoint_sha256": null,
+  "expected_model_version": null,
+  "trusted_local": false,
+  "allowed_fabric_ids": [],
+  "allow_synthetic": false,
+  "timeout_seconds": 10.0,
+  "cpu_threads": 1,
+  "max_checkpoint_bytes": 268435456,
+  "max_mask_runs": 4096
+}

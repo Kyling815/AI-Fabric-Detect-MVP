@@ -1,0 +1,4 @@
+# Optional offline Phase 16 export/parity tools for the existing Torch 2.5.1 stack.
+# Does not select a GPU provider or replace production inference dependencies.
+onnx==1.17.0
+onnxruntime==1.20.1

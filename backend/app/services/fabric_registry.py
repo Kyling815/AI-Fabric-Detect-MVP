@@ -121,6 +121,8 @@ class FabricRegistry:
         fabric: dict[str, Any],
         record: dict[str, Any],
     ) -> FabricReferenceEntry:
+        if "fabric_id" in record and record["fabric_id"] != fabric_id:
+            raise FabricRegistryError("Registered reference belongs to a different fabric")
         return FabricReferenceEntry(
             fabric_id=fabric_id,
             display_name=str(fabric.get("display_name") or fabric_id),

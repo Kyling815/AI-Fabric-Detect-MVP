@@ -1,0 +1,5 @@
+{
+  "enabled": false,
+  "mode": "global_plus_lot",
+  "missing_lot_policy": "error"
+}

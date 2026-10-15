@@ -1,0 +1,1474 @@
+{
+  "phase": 10,
+  "date": "2026-10-14",
+  "status": "RULE_FUSION_EVIDENCE_VERIFIED_OBSERVE_ONLY_DEFAULT_OFF",
+  "baseline_tests": 834,
+  "new_tests": 189,
+  "final_regression": {
+    "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+    "passed": 1023,
+    "warnings": 1,
+    "pytest_seconds": 107.67,
+    "frontend_build": "PASS",
+    "smoke_assertions": 77,
+    "exit_code": 0
+  },
+  "hypothetical_demo": {
+    "phase": 10,
+    "status": "HYPOTHETICAL_SOFTWARE_CHECK_ONLY",
+    "cases": [
+      {
+        "case": "high_supervised_low_anomaly",
+        "expected": "KNOWN_DEFECT",
+        "result": {
+          "kind": "KNOWN_DEFECT",
+          "rule_id": "known_foreground_at_threshold",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.95,
+          "known_defects": [
+            {
+              "class_name": "defect",
+              "class_id": 1,
+              "confidence": 0.95,
+              "predicted_pixels": 20
+            }
+          ],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [],
+          "review_required": false,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "high_supervised_high_anomaly",
+        "expected": "KNOWN_DEFECT",
+        "result": {
+          "kind": "KNOWN_DEFECT",
+          "rule_id": "known_foreground_at_threshold",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.95,
+          "known_defects": [
+            {
+              "class_name": "defect",
+              "class_id": 1,
+              "confidence": 0.95,
+              "predicted_pixels": 20
+            }
+          ],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.9,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.9,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [],
+          "review_required": false,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "low_supervised_high_anomaly",
+        "expected": "UNKNOWN_DEFECT",
+        "result": {
+          "kind": "UNKNOWN_DEFECT",
+          "rule_id": "high_anomaly_at_threshold",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.9,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.9,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [],
+          "review_required": false,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "low_supervised_review_anomaly",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "anomaly_review_at_threshold",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.4,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.4,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "low_supervised_low_anomaly",
+        "expected": "NORMAL",
+        "result": {
+          "kind": "NORMAL",
+          "rule_id": "complete_below_thresholds",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [],
+          "review_required": false,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "missing_supervised",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "missing",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": null,
+          "supervised_checkpoint_sha256": null,
+          "supervised_synthetic": null,
+          "supervised_confidence_calibrated": null,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": null,
+          "known_defects": [],
+          "supervised_mask": null,
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [
+            "supervised_missing"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "missing_anomaly",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "missing",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": null,
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": null,
+          "anomaly_boxes": [],
+          "uncertainties": [
+            "anomaly_missing"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "both_missing",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "missing",
+          "anomaly_status": "missing",
+          "identity": null,
+          "supervised_model_version": null,
+          "supervised_checkpoint_sha256": null,
+          "supervised_synthetic": null,
+          "supervised_confidence_calibrated": null,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": null,
+          "known_confidence": null,
+          "known_defects": [],
+          "supervised_mask": null,
+          "anomaly_score": null,
+          "anomaly_boxes": [],
+          "uncertainties": [
+            "supervised_missing",
+            "anomaly_missing"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "supervised_failure",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "failed",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": null,
+          "supervised_checkpoint_sha256": null,
+          "supervised_synthetic": null,
+          "supervised_confidence_calibrated": null,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": null,
+          "known_defects": [],
+          "supervised_mask": null,
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [
+            "supervised_failed"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "anomaly_failure",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "failed",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": null,
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": null,
+          "anomaly_boxes": [],
+          "uncertainties": [
+            "anomaly_failed"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "supervised_timeout",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "incomplete_or_untrusted_evidence",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "valid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [],
+          "supervised_status": "timeout",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": null,
+          "supervised_checkpoint_sha256": null,
+          "supervised_synthetic": null,
+          "supervised_confidence_calibrated": null,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": null,
+          "known_defects": [],
+          "supervised_mask": null,
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [
+            "supervised_timeout"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": true
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": false
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "invalid_capture",
+        "expected": "INVALID_CAPTURE",
+        "result": {
+          "kind": "INVALID_CAPTURE",
+          "rule_id": "capture_invalid",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "invalid",
+          "capture_source": "caller_declared",
+          "capture_reasons": [
+            "invalid_fixture"
+          ],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.95,
+          "known_defects": [
+            {
+              "class_name": "defect",
+              "class_id": 1,
+              "confidence": 0.95,
+              "predicted_pixels": 20
+            }
+          ],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.9,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.9,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [
+            "capture_invalid"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": false
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": true
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "capture_unchecked",
+        "expected": "NEEDS_REVIEW",
+        "result": {
+          "kind": "NEEDS_REVIEW",
+          "rule_id": "capture_not_verified",
+          "policy": {
+            "mode": "observe_only",
+            "policy_version": "fusion_starting_rules_v1",
+            "known_threshold": 0.9,
+            "anomaly_high_threshold": 0.7,
+            "anomaly_review_threshold": 0.3,
+            "anomaly_score_method": "top_k_mean",
+            "allow_synthetic_supervised": true
+          },
+          "capture_status": "unchecked",
+          "capture_source": "not_checked",
+          "capture_reasons": [],
+          "supervised_status": "available",
+          "anomaly_status": "available",
+          "identity": {
+            "fabric_id": "hypothetical_fabric",
+            "capture_id": "hypothetical_capture"
+          },
+          "supervised_model_version": "hypothetical_model_v1",
+          "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supervised_synthetic": true,
+          "supervised_confidence_calibrated": false,
+          "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+          "anomaly_reference_version": "hypothetical_ref_v1",
+          "known_confidence": 0.2,
+          "known_defects": [],
+          "supervised_mask": {
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shape": [
+              32,
+              32
+            ],
+            "original_shape": [
+              32,
+              48
+            ],
+            "coordinate_frame": "model_grid",
+            "payload_available": true
+          },
+          "anomaly_score": 0.1,
+          "anomaly_boxes": [
+            {
+              "x": 2,
+              "y": 2,
+              "w": 4,
+              "h": 5,
+              "score": 0.1,
+              "label": "dense_anomaly",
+              "coordinate_frame": "oriented_source_pixels"
+            }
+          ],
+          "uncertainties": [
+            "capture_unchecked"
+          ],
+          "review_required": true,
+          "trace": [
+            {
+              "rule": "capture_valid",
+              "passed": false
+            },
+            {
+              "rule": "both_branches_available",
+              "passed": true
+            },
+            {
+              "rule": "identity_compatible",
+              "passed": true
+            },
+            {
+              "rule": "geometry_compatible",
+              "passed": true
+            },
+            {
+              "rule": "synthetic_supervised_allowed",
+              "passed": true
+            },
+            {
+              "rule": "anomaly_score_method_matches",
+              "passed": true
+            },
+            {
+              "rule": "known_foreground_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "high_anomaly_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "anomaly_review_at_threshold",
+              "passed": false
+            },
+            {
+              "rule": "localized_anomaly_review",
+              "passed": false
+            }
+          ],
+          "affects_qc": false
+        }
+      }
+    ],
+    "default_synthetic_policy_result": {
+      "kind": "NEEDS_REVIEW",
+      "rule_id": "incomplete_or_untrusted_evidence",
+      "policy": {
+        "mode": "observe_only",
+        "policy_version": "fusion_starting_rules_v1",
+        "known_threshold": 0.9,
+        "anomaly_high_threshold": 0.7,
+        "anomaly_review_threshold": 0.3,
+        "anomaly_score_method": "top_k_mean",
+        "allow_synthetic_supervised": false
+      },
+      "capture_status": "valid",
+      "capture_source": "caller_declared",
+      "capture_reasons": [],
+      "supervised_status": "available",
+      "anomaly_status": "available",
+      "identity": {
+        "fabric_id": "hypothetical_fabric",
+        "capture_id": "hypothetical_capture"
+      },
+      "supervised_model_version": "hypothetical_model_v1",
+      "supervised_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "supervised_synthetic": true,
+      "supervised_confidence_calibrated": false,
+      "known_confidence_definition": "max_foreground_class_mean_winning_probability",
+      "anomaly_reference_version": "hypothetical_ref_v1",
+      "known_confidence": 0.95,
+      "known_defects": [],
+      "supervised_mask": {
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "shape": [
+          32,
+          32
+        ],
+        "original_shape": [
+          32,
+          48
+        ],
+        "coordinate_frame": "model_grid",
+        "payload_available": true
+      },
+      "anomaly_score": 0.1,
+      "anomaly_boxes": [
+        {
+          "x": 2,
+          "y": 2,
+          "w": 4,
+          "h": 5,
+          "score": 0.1,
+          "label": "dense_anomaly",
+          "coordinate_frame": "oriented_source_pixels"
+        }
+      ],
+      "uncertainties": [
+        "synthetic_supervised_disallowed"
+      ],
+      "review_required": true,
+      "trace": [
+        {
+          "rule": "capture_valid",
+          "passed": true
+        },
+        {
+          "rule": "both_branches_available",
+          "passed": true
+        },
+        {
+          "rule": "identity_compatible",
+          "passed": true
+        },
+        {
+          "rule": "geometry_compatible",
+          "passed": true
+        },
+        {
+          "rule": "synthetic_supervised_allowed",
+          "passed": false
+        },
+        {
+          "rule": "anomaly_score_method_matches",
+          "passed": true
+        },
+        {
+          "rule": "known_foreground_at_threshold",
+          "passed": false
+        },
+        {
+          "rule": "high_anomaly_at_threshold",
+          "passed": false
+        },
+        {
+          "rule": "anomaly_review_at_threshold",
+          "passed": false
+        },
+        {
+          "rule": "localized_anomaly_review",
+          "passed": false
+        }
+      ],
+      "affects_qc": false
+    },
+    "case_count": 13,
+    "models_trained_or_loaded": false,
+    "real_accuracy_evaluated": false,
+    "artifacts_created": false,
+    "hybrid_qc_active": false,
+    "note": "Declared example confidence, scores, hashes and capture validity only; not real predictions or accepted thresholds. NORMAL is evidence, never a GOOD business decision."
+  },
+  "hybrid_qc_active": false,
+  "public_http_schema_changed": false,
+  "production_model_accuracy_evaluated": false,
+  "modified_existing_files": [
+    ".env.example",
+    "backend/app/core/config.py",
+    "backend/app/core/inspection_contracts.py",
+    "backend/app/services/inspection_service.py"
+  ],
+  "existing_files_audited": 292,
+  "unrelated_existing_files_unchanged": 288,
+  "protected_artifacts_unchanged": 55,
+  "protected_scope_counts": {
+    "storage": 311,
+    "data": 643,
+    "user_files": 10,
+    "torch_checkpoints": 3
+  },
+  "production_registry_modified": false,
+  "model_or_reference_artifact_created": false,
+  "assumptions": [
+    "Phase 10 generates evidence only; Phase 11 QC business mapping has not begun.",
+    "Foreground confidence is max of per-class mean winning pixel probability, not background/image-QC confidence.",
+    "Anomaly score is a raw dense nearest-neighbor aggregate and thresholds must match its score method.",
+    "Runtime invocation identity is a hash of local input path for correlation, not content SHA or provenance proof."
+  ],
+  "limitations": [
+    "Thresholds are uncalibrated starting values, no meaningful production segmentation candidate yet.",
+    "Runtime remains legacy anomaly QC even when observe-only fusion flags are enabled; audit explicitly identifies this.",
+    "Model-grid mask descriptors and oriented-source anomaly boxes retain distinct coordinate frames; no physical mapping.",
+    "Missing/failed/unchecked evidence never yields fused NORMAL; positive surviving evidence retains review_required=true.",
+    "No learned fusion, customer severity/acceptance rules, model activation or Phase 11 implementation."
+  ]
+}

@@ -1,0 +1,474 @@
+{
+  "phase": 17,
+  "scope": "ENVIRONMENT_SETUP_AND_SMOKE_ONLY_USER_REVIEW_GATE",
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "recorded_at_utc": "2026-10-15 07:01:33 UTC",
+  "status": "SETUP_SMOKE_COMPLETE_WAITING_FOR_USER_REVIEW",
+  "setup_complete": true,
+  "phase17_full_implementation_complete": false,
+  "phase17_main_model_benchmark_started": false,
+  "phase18_started": false,
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Isolated GPU/TensorRT environment and the five tiny smoke checks only; not main-model parity/performance/VRAM or production readiness.",
+  "user_scope": "Create separate GPU venv, preserve CPU .venv/driver/model artifacts, run five real smoke checks, then STOP for review before Phase17 main-model benchmarking.",
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "branch": "main",
+  "pre_install": {
+    "environment": {
+      "python": "3.11.9",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "torch": "2.5.1+cpu",
+      "torch_cuda_build": null,
+      "torch_cuda_available": false,
+      "torch_cuda_device_count": 0,
+      "tensorrt_module": false,
+      "torch_tensorrt_module": false,
+      "cuda_python_module": false,
+      "onnxruntime": "1.20.1",
+      "onnxruntime_available_providers": [
+        "AzureExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "nvcc_on_path": null,
+      "trtexec_on_path": null
+    },
+    "physical_gpu": {
+      "name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+      "nominal_vram_mib": 4096,
+      "compute_capability": "8.6",
+      "nvidia_driver_version": "610.62",
+      "driver_api_version": 13030,
+      "driver_api_version_label": "13.3",
+      "cuInit_status": 0
+    },
+    "note": "CPU-only described the existing Python environment, NOT absence of a physical NVIDIA GPU. nvcc/Toolkit were not confirmed on PATH/standard locations; driver API/UMD version is not the installed Toolkit."
+  },
+  "post_install": {
+    "environment": {
+      "executable": "C:\\Users\\Admin\\Desktop\\AI Fabric Detect MVP\\.venv-tensorrt\\Scripts\\python.exe",
+      "prefix": "C:\\Users\\Admin\\Desktop\\AI Fabric Detect MVP\\.venv-tensorrt",
+      "python": "3.11.9",
+      "torch": "2.8.0+cu129",
+      "torch_cuda_build": "12.9",
+      "cuda_available": true,
+      "cuda_device_count": 1,
+      "gpu_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+      "compute_capability": [
+        8,
+        6
+      ],
+      "total_vram_bytes": 4294443008,
+      "onnx": "1.17.0",
+      "onnxruntime": "1.20.1",
+      "tensorrt": "10.13.3.9.post1"
+    },
+    "cuda_runtime_api_version": 12090,
+    "cuda_runtime_label": "12.9",
+    "cudaRuntimeGetVersion_status": 0,
+    "cuda_runtime_package": "nvidia-cuda-runtime-cu12==12.9.79",
+    "cuda_toolkit_pip_metapackage": "12.9.2.0; cudart subset, not a global nvcc/C++ SDK install",
+    "driver_after": "610.62",
+    "driver_changed": false,
+    "system_toolkit_installed": false,
+    "global_or_persistent_path_modified": false,
+    "inherited_system_site_packages": false,
+    "full_application_environment": false,
+    "note": "GPU venv is for setup/smoke/native TensorRT only; ONNX Runtime CPU provider deliberately serves as the reference. No ORT GPU EP/TorchVision/FAISS/API dependency migration."
+  },
+  "cpu_environment_preservation": {
+    "dependency_freeze_unchanged": true,
+    "pip_version": "24.0",
+    "torch": "2.5.1+cpu",
+    "torch_cuda_build": null,
+    "onnx": "1.17.0",
+    "onnxruntime": "1.20.1",
+    "dependencies_installed_or_upgraded": false
+  },
+  "gpu_packages": [
+    {
+      "name": "coloredlogs",
+      "version": "15.0.1"
+    },
+    {
+      "name": "cuda-toolkit",
+      "version": "12.9.2.0"
+    },
+    {
+      "name": "filelock",
+      "version": "4.2.0"
+    },
+    {
+      "name": "flatbuffers",
+      "version": "25.12.19"
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.9.0"
+    },
+    {
+      "name": "humanfriendly",
+      "version": "10.0"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4"
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0"
+    },
+    {
+      "name": "networkx",
+      "version": "3.6.1"
+    },
+    {
+      "name": "numpy",
+      "version": "2.2.1"
+    },
+    {
+      "name": "nvidia-cuda-runtime-cu12",
+      "version": "12.9.79"
+    },
+    {
+      "name": "onnx",
+      "version": "1.17.0"
+    },
+    {
+      "name": "onnxruntime",
+      "version": "1.20.1"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "name": "pip",
+      "version": "26.2.1"
+    },
+    {
+      "name": "protobuf",
+      "version": "7.36.2"
+    },
+    {
+      "name": "pyreadline3",
+      "version": "3.5.6"
+    },
+    {
+      "name": "setuptools",
+      "version": "65.5.0"
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0"
+    },
+    {
+      "name": "tensorrt_cu12",
+      "version": "10.13.3.9.post1"
+    },
+    {
+      "name": "tensorrt_cu12_bindings",
+      "version": "10.13.3.9.post1"
+    },
+    {
+      "name": "tensorrt_cu12_libs",
+      "version": "10.13.3.9.post1"
+    },
+    {
+      "name": "torch",
+      "version": "2.8.0+cu129"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    }
+  ],
+  "gpu_pip_check": "PASS",
+  "cpu_pip_check": "PASS",
+  "installation": {
+    "directory": ".venv-tensorrt",
+    "git_ignored": true,
+    "gpu_pip_version": "26.2.1",
+    "pip_upgrade_scope": "New GPU venv ONLY; resumable official downloads after transient network timeouts",
+    "download": {
+      "official_torch_wheel_sha256": "8a92b6ac49be932a8e4f70282d0d396a95a0fc877a9fbe0bd36be5f765707c84",
+      "official_torch_wheel_bytes": 3571828172,
+      "verified_against_official_index": true,
+      "https_certificate_verification_disabled": false,
+      "temporary_parts_removed": 16,
+      "temporary_bytes_freed": 3571828172,
+      "verified_wheel_retained": true,
+      "network_timeouts_recovered": true
+    },
+    "approx_gpu_venv_file_bytes_including_cached_wheel": 13720218618,
+    "compatibility_workarounds_used": false,
+    "tls_verification_disabled": false,
+    "dlls_copied_or_renamed": false,
+    "driver_upgrade_or_downgrade": false
+  },
+  "smoke_command": ".\\.venv-tensorrt\\Scripts\\python.exe scripts/check_phase17_environment.py --smoke",
+  "smoke": {
+    "phase": 17,
+    "scope": "ENVIRONMENT_SETUP_AND_TINY_SMOKE_ONLY_NOT_MAIN_MODEL_BENCHMARK",
+    "all_passed": true,
+    "environment": {
+      "executable": "C:\\Users\\Admin\\Desktop\\AI Fabric Detect MVP\\.venv-tensorrt\\Scripts\\python.exe",
+      "prefix": "C:\\Users\\Admin\\Desktop\\AI Fabric Detect MVP\\.venv-tensorrt",
+      "python": "3.11.9",
+      "torch": "2.8.0+cu129",
+      "torch_cuda_build": "12.9",
+      "cuda_available": true,
+      "cuda_device_count": 1,
+      "gpu_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+      "compute_capability": [
+        8,
+        6
+      ],
+      "total_vram_bytes": 4294443008,
+      "onnx": "1.17.0",
+      "onnxruntime": "1.20.1",
+      "tensorrt": "10.13.3.9.post1"
+    },
+    "smoke": {
+      "cuda_device_detected": true,
+      "pytorch_cuda_inference": [
+        {
+          "precision": "FP32",
+          "passed": true,
+          "atol": 0.00001,
+          "rtol": 0.00001,
+          "max_abs_error": 2.9802322387695312e-8
+        },
+        {
+          "precision": "FP16",
+          "passed": true,
+          "atol": 0.001,
+          "rtol": 0.001,
+          "max_abs_error": 0.0002849102020263672
+        }
+      ],
+      "onnx_load_and_cpu_inference": {
+        "passed": true,
+        "atol": 0.00001,
+        "rtol": 0.00001,
+        "max_abs_error": 5.960464477539063e-8
+      },
+      "tensorrt_import": true,
+      "tiny_engine_build_reload_inference": [
+        {
+          "passed": true,
+          "atol": 0.00001,
+          "rtol": 0.00001,
+          "max_abs_error": 5.960464477539063e-8,
+          "precision": "FP32",
+          "batch_size": 1,
+          "input_shape": [
+            1,
+            3,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            4,
+            14,
+            14
+          ],
+          "graph_sha256": "fcc38cde8abf696e0f46ce24e84d2e2b0824f2b63d1a0ee0e139a6d85b1bdac8",
+          "engine_sha256": "9faad9c858d0e32d6ef4d8adec3e22ab4e3075a09bc9ddd9e155683fdf69483e",
+          "engine_bytes": 21900,
+          "strongly_typed": true,
+          "tf32_enabled": false,
+          "workspace_limit_mib": 64,
+          "engine_reloaded": true,
+          "gpu_execution": true,
+          "benchmark_performed": false
+        },
+        {
+          "passed": true,
+          "atol": 0.001,
+          "rtol": 0.001,
+          "max_abs_error": 0.0003319978713989258,
+          "precision": "FP16",
+          "batch_size": 1,
+          "input_shape": [
+            1,
+            3,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            4,
+            14,
+            14
+          ],
+          "graph_sha256": "fb502b8f3acf230cfef86ff1ce485a44cbf11bb2b6952f7a0007061892163a5f",
+          "engine_sha256": "910e23312dce8bc6fe0883d58325b2ec20661193808997dca41f79354356a7fa",
+          "engine_bytes": 54012,
+          "strongly_typed": true,
+          "tf32_enabled": false,
+          "workspace_limit_mib": 64,
+          "engine_reloaded": true,
+          "gpu_execution": true,
+          "benchmark_performed": false
+        }
+      ]
+    },
+    "model_artifacts_modified": false,
+    "main_model_loaded": false,
+    "main_model_benchmark_performed": false,
+    "batch_2_or_4_tested": false,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "throughput_per_second": null,
+    "peak_vram_usage_bytes": null,
+    "permanent_engine_written": false,
+    "phase17_benchmark_started": false,
+    "phase18_started": false,
+    "status": "SETUP_SMOKE_COMPLETE_WAITING_FOR_USER_REVIEW"
+  },
+  "tests": {
+    "unit_safety": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_tensorrt_environment_smoke.py -q",
+      "passed": 17,
+      "warnings": 0,
+      "seconds": 0.3,
+      "note": "CPU safety/fixture checks, NOT GPU evidence; actual GPU evidence is the smoke payload."
+    },
+    "actual_gpu_smoke": {
+      "stages_required": 5,
+      "stages_passed": 5,
+      "mocked": false,
+      "pytorch_precisions": [
+        "FP32",
+        "FP16"
+      ],
+      "tensorrt_engine_precisions": [
+        "FP32",
+        "FP16"
+      ],
+      "batch_size": 1
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1741,
+      "warnings": 1,
+      "pytest_seconds": 148.37,
+      "exit_code": 0,
+      "previous_suite_count": 1724,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true
+    },
+    "existing_tests_modified": false,
+    "existing_tests_broken": false,
+    "new_test_failures": [],
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "warning": "Existing FAISS NumPy private namespace deprecation."
+  },
+  "created_files": [
+    "requirements-tensorrt.txt",
+    "requirements-tensorrt.lock.txt",
+    "scripts/check_phase17_environment.py",
+    "tests/test_tensorrt_environment_smoke.py",
+    "docs/implementation/phase_17_environment_setup.md",
+    "docs/implementation/phase_17_environment_report.json"
+  ],
+  "modified_existing_files": [
+    ".gitignore"
+  ],
+  "ignored_created_environment": ".venv-tensorrt (includes official vendor packages, verified cached torch wheel and transport helper; not source artifacts to commit)",
+  "existing_files_audited": 367,
+  "unrelated_existing_files_unchanged": 366,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 10,
+      "insertions": 511,
+      "deletions": 132
+    },
+    "phase17_tracked_delta": ".gitignore +1 line only; prior phase/user changes preserved."
+  },
+  "main_model_artifacts_modified": false,
+  "production_registry_modified": false,
+  "production_runtime_integrated": false,
+  "database_schema_changed": false,
+  "public_http_schema_changed": false,
+  "benchmarks": {
+    "status": "NOT_STARTED_WAITING_FOR_USER_ENVIRONMENT_REVIEW",
+    "main_model_loaded": false,
+    "batch_2_or_4_tested": false,
+    "p50_latency_ms": null,
+    "p95_latency_ms": null,
+    "throughput_per_second": null,
+    "peak_vram_bytes": null
+  },
+  "progress_against_requirements": {
+    "title": "Tiến độ so với yêu cầu",
+    "completed_in_this_step": [
+      "Pre-install GPU/driver/CUDA/Python/PyTorch/ONNX/ORT inventory",
+      "Isolated GPU venv provisioned without changes to CPU dependencies or driver",
+      "CUDA device detection",
+      "Actual PyTorch GPU inference FP32/FP16",
+      "ONNX graph load and reference inference",
+      "TensorRT import",
+      "Tiny TensorRT engine build/reload/GPU inference FP32/FP16, batch1"
+    ],
+    "original_phase17_remaining": [
+      "After explicit environment review approval: main candidate numerical validation, FP32/FP16 P50/P95/throughput/VRAM profiling",
+      "Batch1 first; batch2/4 only if actual VRAM measurements allow; no simultaneous segmentation+anomaly GPU residency assumed"
+    ],
+    "phase18": "NOT_STARTED",
+    "production_accuracy_improvement_proven": false,
+    "stop_boundary": "User review before continuing Phase17 benchmark/optimization."
+  },
+  "references": [
+    {
+      "title": "TensorRT10.13.3 CUDA/driver compatibility",
+      "url": "https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/getting-started/release-notes-10/10.13.3.html"
+    },
+    {
+      "title": "Official PyTorch previous-version CUDA wheel instructions",
+      "url": "https://pytorch.org/get-started/previous-versions/"
+    },
+    {
+      "title": "TensorRT Python API",
+      "url": "https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/inference-library/python-api-docs.html"
+    },
+    {
+      "title": "pip resumable downloads",
+      "url": "https://pip.pypa.io/en/stable/news/"
+    }
+  ]
+}

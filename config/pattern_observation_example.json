@@ -1,0 +1,14 @@
+{
+  "mode": "observe_only",
+  "min_period_px": 4,
+  "max_period_px": 256,
+  "min_cycles": 4,
+  "min_profile_length": 64,
+  "min_profile_std": 2.0,
+  "min_peak_correlation": 0.45,
+  "confidence_threshold": 0.65,
+  "period_tolerance": 0.1,
+  "band_count": 7,
+  "band_width": 3,
+  "max_analysis_size": 1024
+}

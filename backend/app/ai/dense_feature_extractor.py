@@ -10,6 +10,7 @@ from torchvision import models, transforms
 
 from backend.app.ai.patching import PatchBox
 from backend.app.ai.projection_head import load_projection_head
+from backend.app.core.runtime_profiling import runtime_stage
 
 
 BASE_BACKBONE_VERSION = "shared_resnet18_imagenet1k_v1"
@@ -109,34 +110,38 @@ class SharedDenseResNet18:
         )
 
     def extract_path(self, path: Path, *, image_max_size: int) -> DenseFeatureResult:
-        with Image.open(path) as source:
-            image = ImageOps.exif_transpose(source).convert("RGB")
+        with runtime_stage("preprocessing"):
+            with Image.open(path) as source:
+                image = ImageOps.exif_transpose(source).convert("RGB")
         return self.extract_image(image, image_max_size=image_max_size)
 
     def extract_image(self, image: Image.Image, *, image_max_size: int) -> DenseFeatureResult:
         if image_max_size <= 0:
             raise ValueError("image_max_size must be positive")
-        original_width, original_height = image.size
-        scale = min(1.0, image_max_size / max(original_width, original_height))
-        processed_width = max(1, round(original_width * scale))
-        processed_height = max(1, round(original_height * scale))
-        resized = image.convert("RGB").resize(
-            (processed_width, processed_height),
-            Image.Resampling.BILINEAR,
-        )
-        tensor = self.transform(resized).unsqueeze(0).to(self.device)
-        with torch.inference_mode():
-            features = self._forward_features(tensor)
-        _, _, grid_rows, grid_cols = features.shape
-        embeddings = (
-            features.squeeze(0)
-            .permute(1, 2, 0)
-            .reshape(grid_rows * grid_cols, -1)
-            .cpu()
-            .numpy()
-            .astype(np.float32)
-        )
-        boxes = _feature_cells(processed_width, processed_height, grid_cols, grid_rows)
+        with runtime_stage("preprocessing"):
+            original_width, original_height = image.size
+            scale = min(1.0, image_max_size / max(original_width, original_height))
+            processed_width = max(1, round(original_width * scale))
+            processed_height = max(1, round(original_height * scale))
+            resized = image.convert("RGB").resize(
+                (processed_width, processed_height),
+                Image.Resampling.BILINEAR,
+            )
+            tensor = self.transform(resized).unsqueeze(0).to(self.device)
+        with runtime_stage("anomaly"):
+            with torch.inference_mode():
+                features = self._forward_features(tensor)
+            _, _, grid_rows, grid_cols = features.shape
+            embeddings = (
+                features.squeeze(0)
+                .permute(1, 2, 0)
+                .reshape(grid_rows * grid_cols, -1)
+                .cpu()
+                .numpy()
+                .astype(np.float32)
+            )
+        with runtime_stage("postprocessing"):
+            boxes = _feature_cells(processed_width, processed_height, grid_cols, grid_rows)
         return DenseFeatureResult(
             embeddings=embeddings,
             boxes=boxes,

@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "phase": 0,
+  "audited_date": "2026-10-13",
+  "timezone": "Asia/Bangkok",
+  "branch": "main",
+  "commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "initial_git_status": [
+    " M tempCodeRunnerFile.exe",
+    "?? Revision.md",
+    "?? deep-research-report.md",
+    "?? test_image/"
+  ],
+  "scope": "Reproducibility fingerprint; does not bundle data, weights, or private .env contents.",
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.5.1+cpu",
+    "torchvision": "0.20.1+cpu",
+    "faiss": "1.9.0",
+    "faiss_distribution": "1.9.0.post1",
+    "cuda_available": false,
+    "torch_cuda_build": null,
+    "node": "22.19.0",
+    "npm": "10.9.3",
+    "react": "19.2.7",
+    "react_dom": "19.2.7",
+    "vite": "8.0.16",
+    "typescript": "6.0.3",
+    "pip_freeze": [
+      "annotated-types==0.8.0",
+      "anyio==4.14.2",
+      "certifi==2026.7.22",
+      "click==8.4.2",
+      "colorama==0.4.6",
+      "faiss-cpu==1.9.0.post1",
+      "fastapi==0.115.6",
+      "filelock==3.32.2",
+      "fsspec==2026.7.0",
+      "greenlet==3.5.5",
+      "h11==0.16.0",
+      "httpcore==1.0.9",
+      "httptools==0.8.0",
+      "httpx==0.28.1",
+      "idna==3.18",
+      "iniconfig==2.3.0",
+      "Jinja2==3.1.6",
+      "joblib==1.5.3",
+      "MarkupSafe==3.0.3",
+      "mpmath==1.3.0",
+      "networkx==3.6.1",
+      "numpy==2.2.1",
+      "opencv-python==4.10.0.84",
+      "packaging==26.3",
+      "pillow==11.0.0",
+      "pluggy==1.6.0",
+      "pydantic==2.10.4",
+      "pydantic-settings==2.7.0",
+      "pydantic_core==2.27.2",
+      "pytest==8.3.4",
+      "python-dotenv==1.2.2",
+      "python-multipart==0.0.20",
+      "PyYAML==6.0.3",
+      "scikit-learn==1.6.0",
+      "scipy==1.17.1",
+      "SQLAlchemy==2.0.36",
+      "starlette==0.41.3",
+      "sympy==1.13.1",
+      "threadpoolctl==3.6.0",
+      "torch==2.5.1",
+      "torchvision==0.20.1",
+      "typing_extensions==4.16.0",
+      "uvicorn==0.34.0",
+      "watchfiles==1.2.0",
+      "websockets==17.0.1"
+    ]
+  },
+  "registered_backbone": "shared_resnet18_imagenet1k_dense_adapter_company_v4",
+  "active_fabric_references": [],
+  "legacy_active_reference_version": "resnet18_company_iqc_raw_all_v2_20260814052015690169",
+  "verification": {
+    "backend": "95 passed, 1 warning in 4.65s",
+    "frontend_build": "PASS; 22 modules transformed",
+    "smoke": "PASS; 77 assertions",
+    "pip_check": "No broken requirements found.",
+    "existing_test_files_modified": false,
+    "protected_scopes_unchanged": true
+  },
+  "protected_scope_fingerprints": [
+    {
+      "scope": "tracked",
+      "file_count": 176,
+      "sha256": "6F83EE1180BB79097EAD45669DBDB7BA8CC956D8794A22D0D0648840769EF030"
+    },
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "scope_fingerprint_algorithm": "Sort unique paths in PowerShell Sort-Object order; each record is absolute_path|byte_length|uppercase_file_sha256; join records with LF, UTF-8 without BOM; SHA-256 of joined bytes. Local-path-dependent. Tracked scope contains the original 176 git ls-files entries.",
+  "artifacts": [
+    {
+      "path": "storage/metadata/fabric_registry.json",
+      "bytes": 12621,
+      "sha256": "2c2043d7a73385776f00e4df7016051da4cd223ec6cbd0ef5e9a034814bf11c2"
+    },
+    {
+      "path": "storage/metadata/reference_registry.json",
+      "bytes": 1582,
+      "sha256": "1eb0774aabe29d34e856c940fe0da92f8ee2f86da487d7f4bd0dbc5bb18a70e5"
+    },
+    {
+      "path": "config/company_demo_fabrics.json",
+      "bytes": 2232,
+      "sha256": "96ceda5b6b948952753b7a6a35c72d68d26680a25eeeeb27f6f0591eab19f7bb"
+    },
+    {
+      "path": "config/preprocessing_v2.json",
+      "bytes": 761,
+      "sha256": "1ec6ae120546286a6db913aee272a3ae5b39f08028c81db4bdcef411c3213a04"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 286,
+      "sha256": "46200c63188c01efe15d789bb84b358dfff0e650ce77c145014fc51ca42b04f6"
+    },
+    {
+      "path": "frontend/package.json",
+      "bytes": 904,
+      "sha256": "808173e117ed4ee8d6e5af744d8f9c46459249fcc11100ca9dfd414da5beb9b2"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "bytes": 113629,
+      "sha256": "2dca3cc5e5de9068049f5ff4b5099e16fea3b685b69a9a32e3567bd80b91c319"
+    },
+    {
+      "path": ".env",
+      "bytes": 1441,
+      "sha256": "4d6937886eb5e9f772813f810db26f0d2eaf663c5588b08f17d396172cba1ba7"
+    },
+    {
+      "path": "storage/models/projection_head_raw_all_v2.pt",
+      "bytes": 662278,
+      "sha256": "1a345c8086d1041e5c535d15843cd9fd832de3b32d2c54016485ce5afac6e91d"
+    },
+    {
+      "path": "storage/models/shared_dense_adapter_company_v1.pt",
+      "bytes": 531896,
+      "sha256": "9dedad073d750f2ea77886930fe5a1f6faf27a60c6520e19e9c8eface2ed826b"
+    },
+    {
+      "path": "storage/models/shared_dense_adapter_company_v4.pt",
+      "bytes": 532088,
+      "sha256": "0b455192d0eae4c5aa1725b12a7c16dffb691ee5a81d44039dbf1de29904858c"
+    },
+    {
+      "path": "storage/references/fabric_001/v1/memory_bank.faiss",
+      "bytes": 18432045,
+      "sha256": "539e186b05408f1d167bde20d39ee7ddce2afa46539dad0ea93b0477a176712f"
+    },
+    {
+      "path": "storage/references/fabric_001/v1/memory_bank.npy",
+      "bytes": 18432128,
+      "sha256": "c46765c0344855d69cf90ee10f1764847cb827073033083765d801e075be3bd0"
+    },
+    {
+      "path": "storage/references/fabric_001/v1/reference.json",
+      "bytes": 9071,
+      "sha256": "ce11ef49c2fcfefd0e873179f4471e342985cea4fd1865688cbe01c4e9f7465b"
+    },
+    {
+      "path": "storage/references/fabric_001/v1/thresholds.json",
+      "bytes": 19549,
+      "sha256": "9519567ec968e0b1c7a814a1173ab88bad16813d9653624aee5e6077b5e9069c"
+    },
+    {
+      "path": "storage/references/fabric_001/v2/memory_bank.faiss",
+      "bytes": 18432045,
+      "sha256": "67fc1b04d65466bdb0c218320010292ba32e547480e4d047d1ad1db019f05d27"
+    },
+    {
+      "path": "storage/references/fabric_001/v2/memory_bank.npy",
+      "bytes": 18432128,
+      "sha256": "3f01bc9bebacdfbb03fb5d34cedc5c39662f39cf97b42ff60bde6072ebc6a7c2"
+    },
+    {
+      "path": "storage/references/fabric_001/v2/reference.json",
+      "bytes": 16683,
+      "sha256": "3e2884b8b9b47bb8a37d47b0c775c29141de631b989581ebbc9582c681a534c3"
+    },
+    {
+      "path": "storage/references/fabric_001/v2/thresholds.json",
+      "bytes": 19384,
+      "sha256": "c8e0870b63f8831cfa655bb7fbc6647ed03ede85f3c9d98ec1b5128f80d0e4a5"
+    },
+    {
+      "path": "storage/references/fabric_001/v3/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "ef57d3047ce3b95d86552a6e69b0122519140f4154e8a6256c1f110bceec63a6"
+    },
+    {
+      "path": "storage/references/fabric_001/v3/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "d454e04177a904cd422988c19191b30e61c42b74088d1691b468a2db02a4eea5"
+    },
+    {
+      "path": "storage/references/fabric_001/v3/reference.json",
+      "bytes": 9396,
+      "sha256": "b6f1a95c59254c22ba5219e42398b8f7c4335cccbdbe78bdac0f230417f42066"
+    },
+    {
+      "path": "storage/references/fabric_001/v3/thresholds.json",
+      "bytes": 14684,
+      "sha256": "dfdf765fd4644da09dbee5728a1329bb137a7d30955b0f22470e64c9598c7b59"
+    },
+    {
+      "path": "storage/references/fabric_001/v4/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "60112e69a1140dd9aa0a266d149c84ad9a9e5c7410e105d3360c5df63a45fa6f"
+    },
+    {
+      "path": "storage/references/fabric_001/v4/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "23e7cacb5791674e63634df4048ec6022bc91f2e0b67de94a121fa25772a2fa4"
+    },
+    {
+      "path": "storage/references/fabric_001/v4/reference.json",
+      "bytes": 11812,
+      "sha256": "ace03323bec04e76455e9d2aa43866c864296c7800fc1c5ce6d4b8164983e07f"
+    },
+    {
+      "path": "storage/references/fabric_001/v4/thresholds.json",
+      "bytes": 20263,
+      "sha256": "f6bad969f92b03ba2e42807c1cf19f970a769f7b978593336ada47083dd3a998"
+    },
+    {
+      "path": "storage/references/fabric_001/v5/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "60112e69a1140dd9aa0a266d149c84ad9a9e5c7410e105d3360c5df63a45fa6f"
+    },
+    {
+      "path": "storage/references/fabric_001/v5/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "23e7cacb5791674e63634df4048ec6022bc91f2e0b67de94a121fa25772a2fa4"
+    },
+    {
+      "path": "storage/references/fabric_001/v5/reference.json",
+      "bytes": 12035,
+      "sha256": "ecdacfd110bbcece30f8b3c90caee36e72ec01c02de867dcf63b6045b2046bcc"
+    },
+    {
+      "path": "storage/references/fabric_001/v5/thresholds.json",
+      "bytes": 37867,
+      "sha256": "dd092a544c219c741c15ce7a97127515123bd0a90775ced45f91d0c4932f2346"
+    },
+    {
+      "path": "storage/references/fabric_002/v1/memory_bank.faiss",
+      "bytes": 18432045,
+      "sha256": "f68649c1a859fd30e51ecffb4c85944d7ff0cc5752b8f8a0b8e0f2263def145e"
+    },
+    {
+      "path": "storage/references/fabric_002/v1/memory_bank.npy",
+      "bytes": 18432128,
+      "sha256": "0b1e8b3b282d2e866dda43b517461e4c091b92a1aedd85973cbde912ef0ffaa5"
+    },
+    {
+      "path": "storage/references/fabric_002/v1/reference.json",
+      "bytes": 7085,
+      "sha256": "24b4565636e60f81e0cba23e6653122aed7e034d3d9554cb319c2e9023ef8560"
+    },
+    {
+      "path": "storage/references/fabric_002/v1/thresholds.json",
+      "bytes": 18575,
+      "sha256": "4998542e8b84ce04b4d335a5cb10394f9b4edbe2a234b5304ad6a7008f8cfbe5"
+    },
+    {
+      "path": "storage/references/fabric_002/v2/memory_bank.faiss",
+      "bytes": 18432045,
+      "sha256": "870e33b3911c2579c0a4bc003e5fc701bfb2644bcb38d8df9c7b8ac5b07fd8be"
+    },
+    {
+      "path": "storage/references/fabric_002/v2/memory_bank.npy",
+      "bytes": 18432128,
+      "sha256": "d76e847a6f10dcde1e1e61a977ad70ef5446c9340bfabda3bbcc3b8e1e4673dd"
+    },
+    {
+      "path": "storage/references/fabric_002/v2/reference.json",
+      "bytes": 14540,
+      "sha256": "a0b8e71946f0a939ea83691cf5d2a68c22fae681d3d69a2699ffc4a552e6efb0"
+    },
+    {
+      "path": "storage/references/fabric_002/v2/thresholds.json",
+      "bytes": 18287,
+      "sha256": "f5a7599383874d295bdeee3d55042a5338fda8ca2355405ae2fe7e6850f9ffe3"
+    },
+    {
+      "path": "storage/references/fabric_002/v3/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "1d27b622c0c71a11ec2cc9d14e3a8ea8e87dedbd3ef2ef8400deba2a2e0d06c5"
+    },
+    {
+      "path": "storage/references/fabric_002/v3/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "49022c762e80f747260044b45626a4ff1f801ab70538000813da50f3a3155be7"
+    },
+    {
+      "path": "storage/references/fabric_002/v3/reference.json",
+      "bytes": 7410,
+      "sha256": "44733993ee171595e07c80c06c03483535734cbe3913d8f8da76fc74396612c8"
+    },
+    {
+      "path": "storage/references/fabric_002/v3/thresholds.json",
+      "bytes": 13640,
+      "sha256": "fbf081d9da3cd46e207b2f4c319f7c07d03f6196b316afbc27d0e561cebf43cf"
+    },
+    {
+      "path": "storage/references/fabric_002/v4/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "547071803f45dba7dac28c0c74eae5148191027f01e0339957b4308f5cd289a7"
+    },
+    {
+      "path": "storage/references/fabric_002/v4/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "6798530aee170403d0000b6eacf39dea5504eb71ca109955314355807f1a0700"
+    },
+    {
+      "path": "storage/references/fabric_002/v4/reference.json",
+      "bytes": 13900,
+      "sha256": "9d74e451cccf17a85d1898bdcadcdf8edd4f2cec57152b987f8231dd0f94f168"
+    },
+    {
+      "path": "storage/references/fabric_002/v4/thresholds.json",
+      "bytes": 21335,
+      "sha256": "cabe69ba712358decbf55c5de5f6890675aa7d649fedc995a4fad7d29770d796"
+    },
+    {
+      "path": "storage/references/fabric_002/v5/memory_bank.faiss",
+      "bytes": 6144045,
+      "sha256": "547071803f45dba7dac28c0c74eae5148191027f01e0339957b4308f5cd289a7"
+    },
+    {
+      "path": "storage/references/fabric_002/v5/memory_bank.npy",
+      "bytes": 6144128,
+      "sha256": "6798530aee170403d0000b6eacf39dea5504eb71ca109955314355807f1a0700"
+    },
+    {
+      "path": "storage/references/fabric_002/v5/reference.json",
+      "bytes": 14113,
+      "sha256": "e04b9e59c3333352fcdea247babe8810099b65d68fafacaba14a223a53b2bcb4"
+    },
+    {
+      "path": "storage/references/fabric_002/v5/thresholds.json",
+      "bytes": 39404,
+      "sha256": "897ed41229592315d5aa2bfeef9f78b77e2cf44f2c1b5806b7832d6b7e9aa5b9"
+    },
+    {
+      "path": "storage/references/shared/shared_resnet18_imagenet1k_dense_adapter_company_v1/backbone.json",
+      "bytes": 300,
+      "sha256": "7edb4ed21b8a07d33a2bcde14432e9cb8dff536e5b1c30964f862bc9316c7c07"
+    },
+    {
+      "path": "storage/references/shared/shared_resnet18_imagenet1k_dense_adapter_company_v4/backbone.json",
+      "bytes": 299,
+      "sha256": "b5e0fee6a67733beac8d8aa85d96ff61dd933479f3ec93d7fdf5924eee7fea96"
+    },
+    {
+      "path": "storage/references/shared/shared_resnet18_imagenet1k_v1/backbone.json",
+      "bytes": 252,
+      "sha256": "2fcb0176db2258cf4430bec2bc28575ccac325c328caaf810b73858f6e6a90aa"
+    },
+    {
+      "path": "C:/Users/Admin/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth",
+      "bytes": 46830571,
+      "sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "phase": 5,
+  "date": "2026-10-14",
+  "real_artifact_diagnostic": {
+    "phase": 5,
+    "scope": "cached CPU CNN/adapter and v5 global banks; all new artifacts in temp",
+    "cases": [
+      {
+        "fabric_id": "fabric_001",
+        "input": "synthetic_checker_retrieval",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      },
+      {
+        "fabric_id": "fabric_001",
+        "input": "synthetic_scratch",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      },
+      {
+        "fabric_id": "fabric_001",
+        "input": "existing_reference_good",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      },
+      {
+        "fabric_id": "fabric_002",
+        "input": "synthetic_checker_retrieval",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      },
+      {
+        "fabric_id": "fabric_002",
+        "input": "synthetic_scratch",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      },
+      {
+        "fabric_id": "fabric_002",
+        "input": "existing_reference_good",
+        "global_vector_count": 12000,
+        "synthetic_lot_vector_count": 32,
+        "feature_dim": 128,
+        "global_only_patch_scores_equal": true,
+        "OFF_exact_baseline": true,
+        "union_min_rule_matches": true,
+        "combined_reload_exact": true
+      }
+    ],
+    "real_lot_evaluation_performed": false,
+    "improvement_status": "UNVERIFIED_NO_INDEPENDENT_REAL_LOT_DATA",
+    "limitations": "Synthetic diagnostic lot, not a real approved lot. Checker retrieval and existing reference Good inputs are not independent evaluation. No accuracy/throughput, QC or activation claims.",
+    "date": "2026-10-14"
+  },
+  "synthetic_comparison": {
+    "phase": 5,
+    "dataset_id": "phase5_synthetic_drift_demo",
+    "fabric_id": "fabric_001",
+    "lot_id": "demo_lot",
+    "evaluation_kind": "synthetic_or_mixed_research",
+    "independence_basis": "Distinct toy query image files; vectors constructed for software checks only.",
+    "comparison_status": "COMPLETED_RESEARCH_ONLY",
+    "improvement_status": "UNVERIFIED_PRODUCTION_BENEFIT",
+    "real_evaluation_performed": false,
+    "fresh_locked_test": false,
+    "qc_performed": false,
+    "effective_mode": "global_plus_lot",
+    "fallback_reason": null,
+    "distance_metric": "cosine",
+    "score_definition": "one_minus_cosine",
+    "aggregation": {
+      "image_score_method": "max",
+      "image_score_top_fraction": 0.01
+    },
+    "global_vector_count": 1,
+    "lot_vector_count": 1,
+    "fabric_only_auroc": 1,
+    "fabric_plus_lot_auroc": 1,
+    "auroc_difference": 0,
+    "metric_note": "AUC requires both classes; scores are uncalibrated. Synthetic/mixed results prove software only. Source provenance/labels are caller-declared; overlap checks do not prove all independence.",
+    "per_image": [
+      {
+        "image_id": "demo_query_0",
+        "label": "normal",
+        "origin": "synthetic",
+        "query_feature_count": 1,
+        "fabric_only_score": 0.19999998807907104,
+        "fabric_plus_lot_score": 0,
+        "nearest_lot_patch_count": 1
+      },
+      {
+        "image_id": "demo_query_1",
+        "label": "normal",
+        "origin": "synthetic",
+        "query_feature_count": 1,
+        "fabric_only_score": 0.10000002384185791,
+        "fabric_plus_lot_score": 0.018466055393218994,
+        "nearest_lot_patch_count": 1
+      },
+      {
+        "image_id": "demo_query_2",
+        "label": "defect",
+        "origin": "synthetic",
+        "query_feature_count": 1,
+        "fabric_only_score": 1,
+        "fabric_plus_lot_score": 0.3999999761581421,
+        "nearest_lot_patch_count": 1
+      },
+      {
+        "image_id": "demo_query_3",
+        "label": "defect",
+        "origin": "synthetic",
+        "query_feature_count": 1,
+        "fabric_only_score": 2,
+        "fabric_plus_lot_score": 1.7999999523162842,
+        "nearest_lot_patch_count": 1
+      }
+    ]
+  },
+  "real_lot_benefit": "UNVERIFIED_NO_INDEPENDENT_REAL_LOT_DATA"
+}

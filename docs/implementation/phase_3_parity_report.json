@@ -1,0 +1,140 @@
+{
+  "phase": 3,
+  "scope": "real cached CPU CNN/adapter and existing v5 FAISS; temporary DB/storage/registry; no locked-test evaluation",
+  "cases": [
+    {
+      "fabric_id": "fabric_001",
+      "input": "synthetic_checker",
+      "result": "BAD",
+      "anomaly_score": 0.36475321650505066,
+      "box_count": 1,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": 16,
+        "period_y_px": 16,
+        "confidence": 0.9925880226875541,
+        "is_periodic": true,
+        "confidence_x": 0.9925880226875541,
+        "confidence_y": 0.9810833218225875,
+        "reason": null
+      }
+    },
+    {
+      "fabric_id": "fabric_001",
+      "input": "synthetic_scratch",
+      "result": "BAD",
+      "anomaly_score": 0.43680694699287415,
+      "box_count": 2,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": null,
+        "period_y_px": 16,
+        "confidence": 0.9810833218225875,
+        "is_periodic": true,
+        "confidence_x": 0.5227319893630654,
+        "confidence_y": 0.9810833218225875,
+        "reason": "one_axis_only"
+      }
+    },
+    {
+      "fabric_id": "fabric_001",
+      "input": "existing_reference_good",
+      "result": "GOOD",
+      "anomaly_score": 0.19239966571331024,
+      "box_count": 3,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": null,
+        "period_y_px": null,
+        "confidence": 0,
+        "is_periodic": false,
+        "confidence_x": 0,
+        "confidence_y": 0,
+        "reason": "low_periodicity_confidence"
+      }
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "synthetic_checker",
+      "result": "BAD",
+      "anomaly_score": 1.224920392036438,
+      "box_count": 1,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": 16,
+        "period_y_px": 16,
+        "confidence": 0.9925880226875541,
+        "is_periodic": true,
+        "confidence_x": 0.9925880226875541,
+        "confidence_y": 0.9810833218225875,
+        "reason": null
+      }
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "synthetic_scratch",
+      "result": "BAD",
+      "anomaly_score": 1.2275404930114746,
+      "box_count": 1,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": null,
+        "period_y_px": 16,
+        "confidence": 0.9810833218225875,
+        "is_periodic": true,
+        "confidence_x": 0.5227319893630654,
+        "confidence_y": 0.9810833218225875,
+        "reason": "one_axis_only"
+      }
+    },
+    {
+      "fabric_id": "fabric_002",
+      "input": "existing_reference_good",
+      "result": "GOOD",
+      "anomaly_score": 0.029862500727176666,
+      "box_count": 0,
+      "full_response_equal": true,
+      "persisted_response_equal": true,
+      "annotated_sha256_equal": true,
+      "embeddings_equal": true,
+      "patch_scores_equal": true,
+      "observation": {
+        "period_x_px": null,
+        "period_y_px": null,
+        "confidence": 0,
+        "is_periodic": false,
+        "confidence_x": 0,
+        "confidence_y": 0,
+        "reason": "low_periodicity_confidence"
+      }
+    }
+  ],
+  "date": "2026-10-13",
+  "normalized_fields": [
+    "inspection_id",
+    "created_at",
+    "original_image_url",
+    "annotated_image_url"
+  ],
+  "limitations": "Six ON/OFF software parity cases only. Good input is an existing reference source, not an unseen holdout; no production accuracy or throughput claim. Registry activation was limited to a temporary copy; original fabric registry remains inactive."
+}

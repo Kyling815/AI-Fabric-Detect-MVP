@@ -1,0 +1,230 @@
+{
+  "phase": 8,
+  "date": "2026-10-14",
+  "scope": "Offline independent supervised CNN baseline; temporary synthetic training only",
+  "baseline_tests": 651,
+  "new_tests": 74,
+  "final_regression": {
+    "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+    "passed": 725,
+    "warnings": 1,
+    "pytest_seconds": 76.30,
+    "frontend_build": "PASS",
+    "smoke_assertions": 77,
+    "exit_code": 0
+  },
+  "synthetic_pretrained_demo": {
+    "phase": 8,
+    "status": "SYNTHETIC_SOFTWARE_CHECK_ONLY",
+    "model_version": "temporary_candidate_v1",
+    "architecture": "independent_resnet18_unet_v1",
+    "preprocessing": "rgb_float_0_1_imagenet_mean_std_in_model_v1",
+    "device": "cpu",
+    "amp_enabled": false,
+    "dataset_version": "phase7_tiny_synthetic_fixture_v1",
+    "dataset_fingerprint": "f41cc356bbd2eb11bc3d00218e0505c6b11db0d76da68b745182cc7a2b1e8031",
+    "encoder_initialization": "imagenet1k_v1",
+    "encoder_weights_sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec",
+    "epochs_completed": 2,
+    "early_stopped": false,
+    "best_epoch": 2,
+    "best_checkpoint": "best_epoch_0002.pt",
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 1.4967360496520996,
+        "validation": {
+          "loss": 1.4600803852081299,
+          "samples": 3,
+          "metrics": {
+            "confusion_matrix": [
+              [
+                111,
+                2831
+              ],
+              [
+                25,
+                105
+              ]
+            ],
+            "valid_pixels": 3072,
+            "pixel_accuracy": 0.0703125,
+            "mean_iou_present": 0.03643625985127179,
+            "mean_dice_present": 0.07030895351010708,
+            "foreground_mean_iou_present": 0.03546099290780142,
+            "foreground_mean_dice_present": 0.0684931506849315,
+            "per_class": {
+              "background": {
+                "iou": 0.03741152679474216,
+                "dice": 0.07212475633528265,
+                "precision": 0.8161764705882353,
+                "recall": 0.03772943575798776,
+                "target_pixels": 2942,
+                "predicted_pixels": 136
+              },
+              "defect": {
+                "iou": 0.03546099290780142,
+                "dice": 0.0684931506849315,
+                "precision": 0.035762942779291554,
+                "recall": 0.8076923076923077,
+                "target_pixels": 130,
+                "predicted_pixels": 2936
+              }
+            },
+            "absent_class_policy": "undefined metrics are None and excluded from macro means"
+          }
+        },
+        "improved": true
+      },
+      {
+        "epoch": 2,
+        "train_loss": 1.46132493019104,
+        "validation": {
+          "loss": 1.4353623390197754,
+          "samples": 3,
+          "metrics": {
+            "confusion_matrix": [
+              [
+                113,
+                2829
+              ],
+              [
+                6,
+                124
+              ]
+            ],
+            "valid_pixels": 3072,
+            "pixel_accuracy": 0.0771484375,
+            "mean_iou_present": 0.040118560627077526,
+            "mean_dice_present": 0.07713660489497633,
+            "foreground_mean_iou_present": 0.04190604934099358,
+            "foreground_mean_dice_present": 0.08044112877067791,
+            "per_class": {
+              "background": {
+                "iou": 0.038331071913161464,
+                "dice": 0.07383208101927474,
+                "precision": 0.9495798319327731,
+                "recall": 0.03840924541128484,
+                "target_pixels": 2942,
+                "predicted_pixels": 119
+              },
+              "defect": {
+                "iou": 0.04190604934099358,
+                "dice": 0.08044112877067791,
+                "precision": 0.041991195394514055,
+                "recall": 0.9538461538461539,
+                "target_pixels": 130,
+                "predicted_pixels": 2953
+              }
+            },
+            "absent_class_policy": "undefined metrics are None and excluded from macro means"
+          }
+        },
+        "improved": true
+      }
+    ],
+    "validation": {
+      "loss": 1.4353623390197754,
+      "samples": 3,
+      "metrics": {
+        "confusion_matrix": [
+          [
+            113,
+            2829
+          ],
+          [
+            6,
+            124
+          ]
+        ],
+        "valid_pixels": 3072,
+        "pixel_accuracy": 0.0771484375,
+        "mean_iou_present": 0.040118560627077526,
+        "mean_dice_present": 0.07713660489497633,
+        "foreground_mean_iou_present": 0.04190604934099358,
+        "foreground_mean_dice_present": 0.08044112877067791,
+        "per_class": {
+          "background": {
+            "iou": 0.038331071913161464,
+            "dice": 0.07383208101927474,
+            "precision": 0.9495798319327731,
+            "recall": 0.03840924541128484,
+            "target_pixels": 2942,
+            "predicted_pixels": 119
+          },
+          "defect": {
+            "iou": 0.04190604934099358,
+            "dice": 0.08044112877067791,
+            "precision": 0.041991195394514055,
+            "recall": 0.9538461538461539,
+            "target_pixels": 130,
+            "predicted_pixels": 2953
+          }
+        },
+        "absent_class_policy": "undefined metrics are None and excluded from macro means"
+      }
+    },
+    "split_counts": {
+      "train": 3,
+      "validation": 3,
+      "test": 3,
+      "historical_locked": 0,
+      "excluded": 0
+    },
+    "warnings": [
+      "Ratios are approximate because entire connected groups are indivisible.",
+      "Original source content is not fully verified where root-source hashes are absent; lineage ids remain caller-declared."
+    ],
+    "trained_model": true,
+    "contains_synthetic_train_or_validation": true,
+    "test_partition_evaluated": false,
+    "production_accuracy_evaluated": false,
+    "production_approved": false,
+    "registry_modified": false,
+    "note": "Validation selected the checkpoint, not a fresh acceptance test. Confidence is uncalibrated. No QC integration. Demo checkpoints and fixtures are in a temporary directory, removed on exit.",
+    "prediction_contract": {
+      "probability_shape": [
+        1,
+        2,
+        32,
+        32
+      ],
+      "mask_shape": [
+        1,
+        32,
+        32
+      ],
+      "confidence_shape": [
+        1,
+        32,
+        32
+      ],
+      "deterministic_evaluation": true,
+      "confidence_calibrated": false
+    },
+    "artifacts_persisted": false
+  },
+  "one_batch_overfit": {
+    "status": "PASS",
+    "initialization": "random_explicit",
+    "batch_size": 2,
+    "image_size": [
+      32,
+      32
+    ],
+    "steps": 200,
+    "encoder_lr": 0.0001,
+    "decoder_lr": 0.01,
+    "asserted_final_loss_below_fraction_of_initial": 0.1,
+    "asserted_foreground_iou_above": 0.95,
+    "measured_fixture_foreground_iou": 1,
+    "scope": "Train-batch software learning check, NOT validation or production accuracy"
+  },
+  "production_training_readiness": "UNVERIFIED_REAL_PIXEL_LABELS_AND_CAPTURE_GROUP_METADATA",
+  "production_model_created": false,
+  "production_artifacts_changed": false,
+  "test_or_locked_pixels_evaluated": false,
+  "existing_files_verified_unchanged": 267,
+  "protected_artifacts_verified_unchanged": 55,
+  "security_note": "Torch 2.5.1+cpu retained for compatibility. Only explicitly trusted local checkpoints; weights_only is not a security boundary on this build. No dependency upgrades performed."
+}

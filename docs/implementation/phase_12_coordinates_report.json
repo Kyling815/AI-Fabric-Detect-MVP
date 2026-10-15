@@ -1,0 +1,598 @@
+{
+  "phase": 12,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "status": "WAITING_FOR_USER_REVIEW",
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Explicit linear coordinate contracts and standalone finite simulation only; not hardware calibration, factory positioning accuracy, streaming or production integration.",
+  "next_phase_started": false,
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "interfaces": [
+    "CameraSource",
+    "EncoderSource",
+    "CoordinateMapper"
+  ],
+  "implementations": [
+    "SimulatedCameraSource",
+    "SimulatedEncoderSource",
+    "CalibratedCoordinateMapper"
+  ],
+  "mapping": {
+    "model": "linear_axis_aligned_v1",
+    "source_frame": "oriented_source_pixels",
+    "pixel_convention": "pixel_edges",
+    "point_bounds": "0 <= x <= width; 0 <= y <= height; centres at column+.5,row+.5",
+    "x_formula": "camera.x_origin_mm + camera.x_direction * x * camera.x_mm_per_pixel",
+    "encoder_anchor_formula": "transport.y_origin_mm + transport.travel_direction * (count - encoder_origin_count) * mm_per_encoder_count + camera.y_offset_mm",
+    "line_anchor_formula": "transport.y_origin_mm + transport.travel_direction * (line_index - line_origin_index) * mm_per_line + camera.y_offset_mm",
+    "y_formula": "anchor + camera.y_direction * y * camera.y_mm_per_pixel",
+    "y_m_formula": "y_mm / 1000",
+    "explicit_calibration_required": true,
+    "raw_acquisition_encoder_position_units_inferred": false,
+    "overlap_semantics": "Positive horizontal lane coverage intersection only; candidates retained separately, no detection deduplication."
+  },
+  "production_runtime_integrated": false,
+  "public_http_schema_changed": false,
+  "database_schema_changed": false,
+  "qc_policy_or_labels_changed": false,
+  "vendor_sdk_integrated": false,
+  "stream_runtime_started": false,
+  "real_calibration_verified": false,
+  "real_data_accuracy_evaluated": false,
+  "production_registry_modified": false,
+  "model_or_reference_artifact_created": false,
+  "model_training_performed": false,
+  "tests": {
+    "phase12": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_physical_coordinate_contracts.py tests/test_coordinate_mapper.py tests/test_simulated_acquisition.py tests/test_coordinate_mapping_integration.py -q",
+      "passed": 151,
+      "warnings": 1,
+      "seconds": 6.35,
+      "by_file": {
+        "contracts": 51,
+        "coordinate_mapper": 65,
+        "simulated_acquisition": 21,
+        "integration": 14
+      }
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1332,
+      "warnings": 1,
+      "pytest_seconds": 174.37,
+      "exit_code": 0,
+      "previous_suite_count": 1181,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true,
+      "existing_cached_backbone_loaded_for_smoke": true
+    },
+    "initial_new_test_failure": "Collection error in new module: Pydantic rejects a wildcard mode=before field validator on the discriminated union's kind field. Replaced with model-level before validation, retaining strict string/axis checks; no old test or source changed.",
+    "existing_tests_broken": false,
+    "existing_tests_modified": false,
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "warning": "Existing FAISS NumPy private-namespace deprecation."
+  },
+  "created_files": [
+    "backend/app/core/physical_coordinates.py",
+    "backend/app/services/coordinate_mapper.py",
+    "backend/app/services/simulated_acquisition.py",
+    "config/physical_calibration_example.json",
+    "scripts/check_phase12_coordinates.py",
+    "tests/physical_coordinate_fixtures.py",
+    "tests/test_coordinate_mapper.py",
+    "tests/test_coordinate_mapping_integration.py",
+    "tests/test_physical_coordinate_contracts.py",
+    "tests/test_simulated_acquisition.py",
+    "docs/implementation/phase_12_physical_coordinates.md",
+    "docs/implementation/phase_12_coordinates_report.json"
+  ],
+  "modified_existing_files": [],
+  "existing_files_audited": 315,
+  "unrelated_existing_files_unchanged": 315,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 7,
+      "insertions": 432,
+      "deletions": 101
+    },
+    "tracked_diff_changed_in_phase12": false,
+    "note": "Tracked diff is entirely prior phases/preexisting user binary; Phase 12 files are new and untracked."
+  },
+  "demo": {
+    "phase": 12,
+    "status": "HYPOTHETICAL_SOFTWARE_CHECK_ONLY",
+    "case_count": 7,
+    "cases": [
+      {
+        "case": "encoder_count_origin",
+        "expected_status": "mapped",
+        "result": {
+          "status": "mapped",
+          "reason": "EXPLICIT_LINEAR_CALIBRATION",
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "frame": {
+            "fabric_id": "hypothetical_fabric",
+            "camera_id": "lane_left",
+            "frame_id": "lane_left_1",
+            "frame_index": 1,
+            "image_width": 48,
+            "image_height": 32,
+            "coordinate_frame": "oriented_source_pixels",
+            "position": {
+              "kind": "encoder_count",
+              "encoder_id": "simulated_encoder",
+              "frame_index": 1,
+              "count": 1100,
+              "simulated": true
+            },
+            "roll_id": "hypothetical_roll",
+            "lot_id": "hypothetical_lot"
+          },
+          "point": {
+            "x_mm": 0,
+            "y_mm": 112
+          },
+          "candidate": null,
+          "mapping_model": "linear_axis_aligned_v1",
+          "y_m": 0.112
+        }
+      },
+      {
+        "case": "simulated_line_origin",
+        "expected_status": "mapped",
+        "result": {
+          "status": "mapped",
+          "reason": "EXPLICIT_LINEAR_CALIBRATION",
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "frame": {
+            "fabric_id": "hypothetical_fabric",
+            "camera_id": "lane_left",
+            "frame_id": "lane_left_1",
+            "frame_index": 1,
+            "image_width": 48,
+            "image_height": 32,
+            "coordinate_frame": "oriented_source_pixels",
+            "position": {
+              "kind": "simulated_line",
+              "frame_index": 1,
+              "line_index": 40,
+              "simulated": true
+            },
+            "roll_id": "hypothetical_roll",
+            "lot_id": "hypothetical_lot"
+          },
+          "point": {
+            "x_mm": 0,
+            "y_mm": 112
+          },
+          "candidate": null,
+          "mapping_model": "linear_axis_aligned_v1",
+          "y_m": 0.112
+        }
+      },
+      {
+        "case": "last_pixel_edge",
+        "expected_status": "mapped",
+        "result": {
+          "status": "mapped",
+          "reason": "EXPLICIT_LINEAR_CALIBRATION",
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "frame": {
+            "fabric_id": "hypothetical_fabric",
+            "camera_id": "lane_left",
+            "frame_id": "lane_left_1",
+            "frame_index": 1,
+            "image_width": 48,
+            "image_height": 32,
+            "coordinate_frame": "oriented_source_pixels",
+            "position": {
+              "kind": "encoder_count",
+              "encoder_id": "simulated_encoder",
+              "frame_index": 1,
+              "count": 1100,
+              "simulated": true
+            },
+            "roll_id": "hypothetical_roll",
+            "lot_id": "hypothetical_lot"
+          },
+          "point": {
+            "x_mm": 24,
+            "y_mm": 120
+          },
+          "candidate": null,
+          "mapping_model": "linear_axis_aligned_v1",
+          "y_m": 0.12
+        }
+      },
+      {
+        "case": "left_overlap_candidate",
+        "expected_status": "mapped",
+        "result": {
+          "status": "mapped",
+          "reason": "EXPLICIT_LINEAR_CALIBRATION",
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "frame": {
+            "fabric_id": "hypothetical_fabric",
+            "camera_id": "lane_left",
+            "frame_id": "lane_left_1",
+            "frame_index": 1,
+            "image_width": 48,
+            "image_height": 32,
+            "coordinate_frame": "oriented_source_pixels",
+            "position": {
+              "kind": "encoder_count",
+              "encoder_id": "simulated_encoder",
+              "frame_index": 1,
+              "count": 1100,
+              "simulated": true
+            },
+            "roll_id": "hypothetical_roll",
+            "lot_id": "hypothetical_lot"
+          },
+          "point": null,
+          "candidate": {
+            "source": {
+              "x": 42,
+              "y": 8,
+              "candidate_id": "left_candidate",
+              "w": 4,
+              "h": 4,
+              "label": "suspicious_defect",
+              "score": 1.2,
+              "coordinate_frame": "oriented_source_pixels"
+            },
+            "minimum": {
+              "x_mm": 21,
+              "y_mm": 114
+            },
+            "maximum": {
+              "x_mm": 23,
+              "y_mm": 115
+            },
+            "width_mm": 2,
+            "length_mm": 1,
+            "overlap_camera_ids": [
+              "lane_right"
+            ]
+          },
+          "mapping_model": "linear_axis_aligned_v1"
+        }
+      },
+      {
+        "case": "right_overlap_candidate",
+        "expected_status": "mapped",
+        "result": {
+          "status": "mapped",
+          "reason": "EXPLICIT_LINEAR_CALIBRATION",
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "frame": {
+            "fabric_id": "hypothetical_fabric",
+            "camera_id": "lane_right",
+            "frame_id": "lane_right_1",
+            "frame_index": 1,
+            "image_width": 48,
+            "image_height": 32,
+            "coordinate_frame": "oriented_source_pixels",
+            "position": {
+              "kind": "encoder_count",
+              "encoder_id": "simulated_encoder",
+              "frame_index": 1,
+              "count": 1100,
+              "simulated": true
+            },
+            "roll_id": "hypothetical_roll",
+            "lot_id": "hypothetical_lot"
+          },
+          "point": null,
+          "candidate": {
+            "source": {
+              "x": 2,
+              "y": 8,
+              "candidate_id": "right_candidate",
+              "w": 4,
+              "h": 4,
+              "label": "suspicious_defect",
+              "score": 1.2,
+              "coordinate_frame": "oriented_source_pixels"
+            },
+            "minimum": {
+              "x_mm": 21,
+              "y_mm": 114
+            },
+            "maximum": {
+              "x_mm": 23,
+              "y_mm": 115
+            },
+            "width_mm": 2,
+            "length_mm": 1,
+            "overlap_camera_ids": [
+              "lane_left"
+            ]
+          },
+          "mapping_model": "linear_axis_aligned_v1"
+        }
+      },
+      {
+        "case": "no_calibration",
+        "expected_status": "unavailable",
+        "result": {
+          "status": "unavailable",
+          "reason": "CALIBRATION_UNAVAILABLE",
+          "calibration": null,
+          "frame": null,
+          "point": null,
+          "candidate": null,
+          "mapping_model": "linear_axis_aligned_v1"
+        }
+      },
+      {
+        "case": "invalid_calibration",
+        "expected_status": "unavailable",
+        "result": {
+          "status": "unavailable",
+          "reason": "INVALID_CALIBRATION",
+          "calibration": null,
+          "frame": null,
+          "point": null,
+          "candidate": null,
+          "mapping_model": "linear_axis_aligned_v1"
+        }
+      }
+    ],
+    "overlap_regions": [
+      {
+        "camera_ids": [
+          "lane_left",
+          "lane_right"
+        ],
+        "x_min_mm": 20,
+        "x_max_mm": 24
+      }
+    ],
+    "real_calibration_verified": false,
+    "production_runtime_integrated": false,
+    "vendor_sdk_integrated": false,
+    "stream_runtime_started": false,
+    "writes_performed": false,
+    "models_trained_or_loaded": false,
+    "note": "Explicit synthetic linear calibration only. Overlapping candidates retain separate IDs; no merging or physical QC policy. Source edge coordinates, synchronized first-row transport anchor, no perspective/lens/slip compensation."
+  },
+  "limitations": [
+    "All calibration values are hypothetical; no sensor/vendor SDK, physical calibration validation or factory accuracy measurement.",
+    "First-row transport anchor must be synchronized externally; matching frame index is a contract check, not hardware timestamp/trigger proof.",
+    "Linear axis-aligned model only; no perspective, lens distortion, skew, slip, stretch, encoder wrap/latency or drift compensation.",
+    "Only explicit oriented-source pixel candidates map; supervised model-grid masks need a verified geometry transform first.",
+    "No HTTP/DB/annotation/runtime integration, no physical QC thresholds and no inference changes.",
+    "Overlap metadata describes horizontal camera coverage, not fused detections or temporal association; candidate IDs are camera/frame-scoped.",
+    "Finite in-memory capture at explicit index, limited to four million pixels; no stream loop, backpressure, PLC or Phase 13 work.",
+    "Calibration/world origin and roll/lot consistency are caller responsibilities; declared metadata is not provenance proof."
+  ]
+}

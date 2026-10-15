@@ -1,0 +1,9 @@
+{
+  "mode": "observe_only",
+  "policy_version": "fusion_starting_rules_v1",
+  "known_threshold": 0.9,
+  "anomaly_high_threshold": 0.7,
+  "anomaly_review_threshold": 0.3,
+  "anomaly_score_method": "top_k_mean",
+  "allow_synthetic_supervised": false
+}

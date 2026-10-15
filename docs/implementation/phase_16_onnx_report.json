@@ -1,0 +1,945 @@
+{
+  "phase": 16,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "measured_at_utc": "2026-10-15 05:48:27 UTC",
+  "status": "WAITING_FOR_USER_REVIEW",
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Offline fixed-shape CPU supervised ONNX export/reload and numerical parity software only; not production model quality, GPU optimization or release acceptance.",
+  "next_phase_started": false,
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "implementation": [
+    "OnnxExportConfig/OnnxManifest",
+    "export_segmentation_onnx",
+    "OnnxSegmentationRunner",
+    "offline CLI and temporary synthetic demo"
+  ],
+  "semantics": {
+    "opt_in": "Standalone library/CLI only; no API settings, schema, registry, runtime switching or FAISS conversion.",
+    "precision": "FP32, opset17, torch.onnx.export(dynamo=false), CPUExecutionProvider selected explicitly; no GPU/FP16/INT8/TensorRT work.",
+    "input": "Exact fixed NCHW RGB float32 [0,1], dimensions matching artifact. Image EXIF/decoding/resize remain caller responsibilities; ImageNet normalization is inside graph.",
+    "output": [
+      "logits float32 BCHW",
+      "probabilities float32 BCHW",
+      "mask int64 BHW",
+      "confidence float32 BHW"
+    ],
+    "parity": "7 deterministic software probes per export; float outputs allclose(actual,expected,atol=1e-4,rtol=1e-4) by default; integer masks exact, no silently accepted argmax flips or automatic tolerance relaxation.",
+    "publication": "Only after ONNX checker and actual CPU inference/parity pass; new directory and exclusive files, no overwrites. Reuses Phase8 protected data/source/cache/production-storage path guard.",
+    "trust": "Trusted local source acknowledgement, source SHA pin and model version; same opened stream hashed then loaded. Legacy torch.load is not an untrusted-file sandbox.",
+    "reload": "External model AND manifest SHA pins; binds taxonomy/shape/provenance to trusted caller pins. Same verified model bytes supplied to checker and runtime; external tensor initializers/custom opsets rejected.",
+    "guard_boundary": "Python input checks become trace constants, not ONNX validation logic. Use host runner for shape/dtype/finiteness/range checks; raw ONNX callers must provide equivalent guards.",
+    "artifact_files": [
+      "model.onnx",
+      "manifest.json",
+      "parity_report.json"
+    ],
+    "production_approval": false,
+    "offline_only": true,
+    "global_state": "Export temporarily changes/restores RNG/thread/backend settings; run offline/sequentially, never concurrently inside production inference."
+  },
+  "dependencies": {
+    "optional_file": "requirements-onnx.txt",
+    "direct": [
+      "onnx==1.17.0",
+      "onnxruntime==1.20.1"
+    ],
+    "added_packages": [
+      "coloredlogs==15.0.1",
+      "flatbuffers==25.12.19",
+      "humanfriendly==10.0",
+      "onnx==1.17.0",
+      "onnxruntime==1.20.1",
+      "protobuf==7.36.2",
+      "pyreadline3==3.5.6"
+    ],
+    "changed_or_removed_original_packages": [],
+    "pip_check": "PASS",
+    "base_requirements_modified": false,
+    "torch_upgraded": false
+  },
+  "tests": {
+    "phase16": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_segmentation_onnx_contracts.py tests/test_segmentation_onnx_export.py tests/test_segmentation_onnx_integration.py -q",
+      "passed": 107,
+      "warnings": 1,
+      "seconds": 29.83,
+      "by_file": {
+        "tests/test_segmentation_onnx_contracts.py": 58,
+        "tests/test_segmentation_onnx_export.py": 40,
+        "tests/test_segmentation_onnx_integration.py": 9
+      },
+      "skipped": 0
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1724,
+      "warnings": 1,
+      "pytest_seconds": 146.01,
+      "exit_code": 0,
+      "previous_suite_count": 1617,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true
+    },
+    "existing_tests_modified": false,
+    "existing_tests_broken": false,
+    "new_test_failures": [],
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "warning": "Existing FAISS NumPy private namespace deprecation. Export TracerWarnings are captured and explicitly recorded, not claimed absent."
+  },
+  "created_files": [
+    "backend/app/ai/segmentation_onnx.py",
+    "backend/app/core/segmentation_onnx.py",
+    "requirements-onnx.txt",
+    "scripts/export_segmentation_onnx.py",
+    "tests/segmentation_onnx_fixtures.py",
+    "tests/test_segmentation_onnx_contracts.py",
+    "tests/test_segmentation_onnx_export.py",
+    "tests/test_segmentation_onnx_integration.py",
+    "docs/implementation/phase_16_onnx_export.md",
+    "docs/implementation/phase_16_onnx_report.json"
+  ],
+  "modified_existing_files": [],
+  "existing_files_audited": 357,
+  "unrelated_existing_files_unchanged": 357,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "branch": "main",
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 9,
+      "insertions": 510,
+      "deletions": 132
+    },
+    "tracked_diff_changed_in_phase16": false,
+    "note": "All Phase16 source/report changes are newly added untracked files. Cumulative tracked diff and user binary belong to previous work."
+  },
+  "production_registry_modified": false,
+  "production_runtime_integrated": false,
+  "public_http_schema_changed": false,
+  "database_schema_changed": false,
+  "anomaly_converted": false,
+  "real_data_accuracy_evaluated": false,
+  "real_candidate_exported": false,
+  "permanent_onnx_demo_artifacts_retained": false,
+  "demo_command": ".\\.venv\\Scripts\\python.exe scripts/export_segmentation_onnx.py --demo",
+  "maximum_absolute_error": {
+    "logits": 0.000003993511199951172,
+    "probabilities": 0.0000013709068298339844,
+    "confidence": 0.0000013709068298339844
+  },
+  "mask_mismatched_pixels": 0,
+  "demo": {
+    "phase": 16,
+    "scope": "SYNTHETIC_SOFTWARE_PARITY_ONLY_UNTRAINED_DECODER",
+    "exports": [
+      {
+        "model_sha256": "e4c568dce8b5d8312be8b549876e0e2f83b88017cd9e27aecd1085b8f346e8b4",
+        "manifest_sha256": "d147b0251fde1d863c72247faa87edc2e088f5765e829612f9e0a689c802d624",
+        "manifest": {
+          "schema_version": 1,
+          "artifact_type": "offline_supervised_onnx",
+          "model_filename": "model.onnx",
+          "model_sha256": "e4c568dce8b5d8312be8b549876e0e2f83b88017cd9e27aecd1085b8f346e8b4",
+          "source_checkpoint_sha256": "e9253175342f5ab98287688a41e787ea71c705e79d56124da736dbfca1dea946",
+          "source_model_version": "synthetic_UNTRAINED_runtime_probe_v1",
+          "synthetic": true,
+          "production_approved": false,
+          "architecture": "independent_resnet18_unet_v1",
+          "preprocessing": "rgb_float_0_1_imagenet_mean_std_in_model_v1",
+          "taxonomy": {
+            "classes": [
+              "background",
+              "defect"
+            ],
+            "ignore_index": null
+          },
+          "config": {
+            "input_shape": [
+              1,
+              3,
+              64,
+              64
+            ],
+            "opset_version": 17,
+            "atol": 0.0001,
+            "rtol": 0.0001
+          },
+          "input_name": "images",
+          "output_names": [
+            "logits",
+            "probabilities",
+            "mask",
+            "confidence"
+          ],
+          "input_dtype": "float32",
+          "provider": "CPUExecutionProvider",
+          "exporter": "torch.onnx.export_dynamo_false",
+          "torch_version": "2.5.1+cpu",
+          "onnx_version": "1.17.0",
+          "onnxruntime_version": "1.20.1",
+          "parity_passed": true,
+          "parity_case_count": 7
+        },
+        "parity": {
+          "scope": "NUMERICAL_SOFTWARE_PARITY_NOT_ACCURACY_OR_RELEASE_ACCEPTANCE",
+          "passed": true,
+          "atol": 0.0001,
+          "rtol": 0.0001,
+          "mask_requires_exact_equality": true,
+          "cases": {
+            "black": {
+              "logits": {
+                "max_abs_error": 0.000003814697265625,
+                "mean_abs_error": 6.583914000657387e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000012814998626708984,
+                "mean_abs_error": 2.4928885977715254e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000012516975402832031,
+                "mean_abs_error": 2.4893961381167173e-7,
+                "allclose": true
+              }
+            },
+            "white": {
+              "logits": {
+                "max_abs_error": 0.000003337860107421875,
+                "mean_abs_error": 5.304395926941652e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000010132789611816406,
+                "mean_abs_error": 2.0437164494069293e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000010132789611816406,
+                "mean_abs_error": 2.04920070245862e-7,
+                "allclose": true
+              }
+            },
+            "uniform": {
+              "logits": {
+                "max_abs_error": 0.0000036954879760742188,
+                "mean_abs_error": 4.004921265732264e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000012516975402832031,
+                "mean_abs_error": 1.52598659042269e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000012516975402832031,
+                "mean_abs_error": 1.528533175587654e-7,
+                "allclose": true
+              }
+            },
+            "checker": {
+              "logits": {
+                "max_abs_error": 9.685754776000977e-7,
+                "mean_abs_error": 1.8255741451866925e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 4.172325134277344e-7,
+                "mean_abs_error": 7.231301424326375e-8,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 4.172325134277344e-7,
+                "mean_abs_error": 7.144990377128124e-8,
+                "allclose": true
+              }
+            },
+            "scratch": {
+              "logits": {
+                "max_abs_error": 0.00000286102294921875,
+                "mean_abs_error": 4.674275260185823e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000011920928955078125,
+                "mean_abs_error": 1.850748958531767e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000011920928955078125,
+                "mean_abs_error": 1.8498394638299942e-7,
+                "allclose": true
+              }
+            },
+            "color_channels": {
+              "logits": {
+                "max_abs_error": 0.000003993511199951172,
+                "mean_abs_error": 4.677174274547724e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000013709068298339844,
+                "mean_abs_error": 1.7298953025601804e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000013709068298339844,
+                "mean_abs_error": 1.7273123376071453e-7,
+                "allclose": true
+              }
+            },
+            "seeded_noise": {
+              "logits": {
+                "max_abs_error": 0.0000016689300537109375,
+                "mean_abs_error": 2.611127456475515e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 1.0542134987190366e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 1.050939317792654e-7,
+                "allclose": true
+              }
+            }
+          },
+          "export_warnings": [
+            "TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!"
+          ],
+          "note": "Python tensor-value/shape checks are traced as constants, NOT ONNX guards. Use the fixed-shape validating host runner.",
+          "production_approved": false
+        },
+        "bundle_bytes": 49862137,
+        "output_dir": "<temporary_export_removed_after_demo>",
+        "reload_inference": {
+          "passed": true,
+          "logits_shape": [
+            1,
+            2,
+            64,
+            64
+          ],
+          "mask_shape": [
+            1,
+            64,
+            64
+          ],
+          "mask_dtype": "int64"
+        }
+      },
+      {
+        "model_sha256": "69d9e94a9330ab7e7ca43b6bf8aa0059206a45a3443c61023964ea0030ab907e",
+        "manifest_sha256": "5c3649256d81633b2a18edfcb20541a1f4afe4fdcf42b7a5f0c55f0d19a8e26a",
+        "manifest": {
+          "schema_version": 1,
+          "artifact_type": "offline_supervised_onnx",
+          "model_filename": "model.onnx",
+          "model_sha256": "69d9e94a9330ab7e7ca43b6bf8aa0059206a45a3443c61023964ea0030ab907e",
+          "source_checkpoint_sha256": "e9253175342f5ab98287688a41e787ea71c705e79d56124da736dbfca1dea946",
+          "source_model_version": "synthetic_UNTRAINED_runtime_probe_v1",
+          "synthetic": true,
+          "production_approved": false,
+          "architecture": "independent_resnet18_unet_v1",
+          "preprocessing": "rgb_float_0_1_imagenet_mean_std_in_model_v1",
+          "taxonomy": {
+            "classes": [
+              "background",
+              "defect"
+            ],
+            "ignore_index": null
+          },
+          "config": {
+            "input_shape": [
+              1,
+              3,
+              35,
+              49
+            ],
+            "opset_version": 17,
+            "atol": 0.0001,
+            "rtol": 0.0001
+          },
+          "input_name": "images",
+          "output_names": [
+            "logits",
+            "probabilities",
+            "mask",
+            "confidence"
+          ],
+          "input_dtype": "float32",
+          "provider": "CPUExecutionProvider",
+          "exporter": "torch.onnx.export_dynamo_false",
+          "torch_version": "2.5.1+cpu",
+          "onnx_version": "1.17.0",
+          "onnxruntime_version": "1.20.1",
+          "parity_passed": true,
+          "parity_case_count": 7
+        },
+        "parity": {
+          "scope": "NUMERICAL_SOFTWARE_PARITY_NOT_ACCURACY_OR_RELEASE_ACCEPTANCE",
+          "passed": true,
+          "atol": 0.0001,
+          "rtol": 0.0001,
+          "mask_requires_exact_equality": true,
+          "cases": {
+            "black": {
+              "logits": {
+                "max_abs_error": 0.00000286102294921875,
+                "mean_abs_error": 5.869987711266943e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.000001043081283569336,
+                "mean_abs_error": 2.3722387958893623e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000010132789611816406,
+                "mean_abs_error": 2.3671558925083706e-7,
+                "allclose": true
+              }
+            },
+            "white": {
+              "logits": {
+                "max_abs_error": 0.0000020563602447509766,
+                "mean_abs_error": 3.4107802213107184e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 8.046627044677734e-7,
+                "mean_abs_error": 1.2139015920655721e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 7.152557373046875e-7,
+                "mean_abs_error": 1.201129168185131e-7,
+                "allclose": true
+              }
+            },
+            "uniform": {
+              "logits": {
+                "max_abs_error": 0.0000018477439880371094,
+                "mean_abs_error": 3.1748379284716905e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 6.556510925292969e-7,
+                "mean_abs_error": 1.220722240192202e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 5.960464477539062e-7,
+                "mean_abs_error": 1.21016544086245e-7,
+                "allclose": true
+              }
+            },
+            "checker": {
+              "logits": {
+                "max_abs_error": 0.0000018700957298278809,
+                "mean_abs_error": 2.8303897676245466e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 6.556510925292969e-7,
+                "mean_abs_error": 1.1074647263952316e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 6.556510925292969e-7,
+                "mean_abs_error": 1.1020777176837532e-7,
+                "allclose": true
+              }
+            },
+            "scratch": {
+              "logits": {
+                "max_abs_error": 0.000001996755599975586,
+                "mean_abs_error": 3.5989834077156665e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 7.152557373046875e-7,
+                "mean_abs_error": 1.4481930273962438e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 7.152557373046875e-7,
+                "mean_abs_error": 1.450669313658778e-7,
+                "allclose": true
+              }
+            },
+            "color_channels": {
+              "logits": {
+                "max_abs_error": 0.0000019073486328125,
+                "mean_abs_error": 3.482494774782275e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 7.450580596923828e-7,
+                "mean_abs_error": 1.4405035068967947e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 7.152557373046875e-7,
+                "mean_abs_error": 1.4322492193550132e-7,
+                "allclose": true
+              }
+            },
+            "seeded_noise": {
+              "logits": {
+                "max_abs_error": 0.0000013113021850585938,
+                "mean_abs_error": 2.6326018328569375e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 1.035674146591053e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 1.0370860641968841e-7,
+                "allclose": true
+              }
+            }
+          },
+          "export_warnings": [
+            "TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!"
+          ],
+          "note": "Python tensor-value/shape checks are traced as constants, NOT ONNX guards. Use the fixed-shape validating host runner.",
+          "production_approved": false
+        },
+        "bundle_bytes": 49862137,
+        "output_dir": "<temporary_export_removed_after_demo>",
+        "reload_inference": {
+          "passed": true,
+          "logits_shape": [
+            1,
+            2,
+            35,
+            49
+          ],
+          "mask_shape": [
+            1,
+            35,
+            49
+          ],
+          "mask_dtype": "int64"
+        }
+      },
+      {
+        "model_sha256": "526fdf02f6aff68483f0768cd3604dbdd5b2f621c1898a2c7aa72ae0cd89ac99",
+        "manifest_sha256": "21c8277da4489630df07b78ce92fdaa93c3791132998e67ed242a14fdc8536f3",
+        "manifest": {
+          "schema_version": 1,
+          "artifact_type": "offline_supervised_onnx",
+          "model_filename": "model.onnx",
+          "model_sha256": "526fdf02f6aff68483f0768cd3604dbdd5b2f621c1898a2c7aa72ae0cd89ac99",
+          "source_checkpoint_sha256": "e9253175342f5ab98287688a41e787ea71c705e79d56124da736dbfca1dea946",
+          "source_model_version": "synthetic_UNTRAINED_runtime_probe_v1",
+          "synthetic": true,
+          "production_approved": false,
+          "architecture": "independent_resnet18_unet_v1",
+          "preprocessing": "rgb_float_0_1_imagenet_mean_std_in_model_v1",
+          "taxonomy": {
+            "classes": [
+              "background",
+              "defect"
+            ],
+            "ignore_index": null
+          },
+          "config": {
+            "input_shape": [
+              2,
+              3,
+              32,
+              48
+            ],
+            "opset_version": 17,
+            "atol": 0.0001,
+            "rtol": 0.0001
+          },
+          "input_name": "images",
+          "output_names": [
+            "logits",
+            "probabilities",
+            "mask",
+            "confidence"
+          ],
+          "input_dtype": "float32",
+          "provider": "CPUExecutionProvider",
+          "exporter": "torch.onnx.export_dynamo_false",
+          "torch_version": "2.5.1+cpu",
+          "onnx_version": "1.17.0",
+          "onnxruntime_version": "1.20.1",
+          "parity_passed": true,
+          "parity_case_count": 7
+        },
+        "parity": {
+          "scope": "NUMERICAL_SOFTWARE_PARITY_NOT_ACCURACY_OR_RELEASE_ACCEPTANCE",
+          "passed": true,
+          "atol": 0.0001,
+          "rtol": 0.0001,
+          "mask_requires_exact_equality": true,
+          "cases": {
+            "black": {
+              "logits": {
+                "max_abs_error": 0.000002562999725341797,
+                "mean_abs_error": 5.092272961822649e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000011026859283447266,
+                "mean_abs_error": 1.8672290025278926e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000010728836059570312,
+                "mean_abs_error": 1.856436332066854e-7,
+                "allclose": true
+              }
+            },
+            "white": {
+              "logits": {
+                "max_abs_error": 0.0000034570693969726562,
+                "mean_abs_error": 4.19234008101436e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 0.0000011622905731201172,
+                "mean_abs_error": 1.685257302597165e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 0.0000011324882507324219,
+                "mean_abs_error": 1.6895743707815805e-7,
+                "allclose": true
+              }
+            },
+            "uniform": {
+              "logits": {
+                "max_abs_error": 0.0000026226043701171875,
+                "mean_abs_error": 4.744488251162693e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 9.5367431640625e-7,
+                "mean_abs_error": 1.7923836518699923e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 9.5367431640625e-7,
+                "mean_abs_error": 1.7947362114985785e-7,
+                "allclose": true
+              }
+            },
+            "checker": {
+              "logits": {
+                "max_abs_error": 0.0000011920928955078125,
+                "mean_abs_error": 1.882096209252874e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 7.351870105291407e-8,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 7.268196592728297e-8,
+                "allclose": true
+              }
+            },
+            "scratch": {
+              "logits": {
+                "max_abs_error": 0.0000022649765014648438,
+                "mean_abs_error": 3.6801187282738585e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 8.344650268554688e-7,
+                "mean_abs_error": 1.4391844160854816e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 8.344650268554688e-7,
+                "mean_abs_error": 1.433460662762324e-7,
+                "allclose": true
+              }
+            },
+            "color_channels": {
+              "logits": {
+                "max_abs_error": 0.0000016242265701293945,
+                "mean_abs_error": 3.4560798667371273e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 7.748603820800781e-7,
+                "mean_abs_error": 1.3761261167625585e-7,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 7.748603820800781e-7,
+                "mean_abs_error": 1.371372491121292e-7,
+                "allclose": true
+              }
+            },
+            "seeded_noise": {
+              "logits": {
+                "max_abs_error": 0.0000016093254089355469,
+                "mean_abs_error": 2.197227028470176e-7,
+                "allclose": true
+              },
+              "probabilities": {
+                "max_abs_error": 5.960464477539062e-7,
+                "mean_abs_error": 8.727026094372074e-8,
+                "allclose": true
+              },
+              "mask": {
+                "mismatched_pixels": 0,
+                "exact": true
+              },
+              "confidence": {
+                "max_abs_error": 5.364418029785156e-7,
+                "mean_abs_error": 8.7214478602012e-8,
+                "allclose": true
+              }
+            }
+          },
+          "export_warnings": [
+            "TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!"
+          ],
+          "note": "Python tensor-value/shape checks are traced as constants, NOT ONNX guards. Use the fixed-shape validating host runner.",
+          "production_approved": false
+        },
+        "bundle_bytes": 49862137,
+        "output_dir": "<temporary_export_removed_after_demo>",
+        "reload_inference": {
+          "passed": true,
+          "logits_shape": [
+            2,
+            2,
+            32,
+            48
+          ],
+          "mask_shape": [
+            2,
+            32,
+            48
+          ],
+          "mask_dtype": "int64"
+        }
+      }
+    ],
+    "fixed_shape_exports": 3,
+    "parity_cases": 21,
+    "all_passed": true,
+    "provider": "CPUExecutionProvider",
+    "training_performed": false,
+    "permanent_model_artifacts_written": false,
+    "production_registry_modified": false,
+    "anomaly_converted": false,
+    "production_approved": false,
+    "next_phase_started": false
+  },
+  "progress_against_requirements": {
+    "title": "Tiến độ so với yêu cầu",
+    "current_implemented_phase": 16,
+    "phase0_is_additional_baseline": true,
+    "planned_phases_1_to_18": 18,
+    "not_started": [
+      17,
+      18
+    ],
+    "production_readiness_percentage": null,
+    "note": "Implemented-through-phase number is not a production completion percentage; several modules remain research/observe-only/offline and await data/hardware acceptance.",
+    "phase16_requirements": {
+      "pytorch_behavior_stable": "PASS_SOFTWARE_REGRESSION_AND_CHECKPOINT_PARITY",
+      "export": "PASS",
+      "reload": "PASS",
+      "inference": "PASS_CPU",
+      "numerical_parity": "PASS_DEFINED_TOLERANCE_AND_EXACT_MASKS",
+      "fixed_input_shapes": "PASS_3_DISTINCT_EXPORTS",
+      "error_handling": "PASS",
+      "anomaly_faiss_preserved": "PASS"
+    },
+    "roadmap": [
+      {
+        "phases": "0–4",
+        "implemented": "Baseline, runtime contracts, quality/pattern scaffolds, anomaly abstraction/experiments",
+        "remaining": "Observation/research infrastructure; not proof of real-data defect performance."
+      },
+      {
+        "phases": "5–6",
+        "implemented": "Fabric/lot memory and pattern-aware ablation tooling",
+        "remaining": "Independent real-lot/generalization benefit remains unverified."
+      },
+      {
+        "phases": "7–8",
+        "implemented": "Segmentation data contracts, grouped splits, metrics, independent CNN/trainer",
+        "remaining": "Company real pixel-label/provenance readiness and meaningful production training remain blocked by data."
+      },
+      {
+        "phases": "9–11",
+        "implemented": "Supervised shadow, evidence fusion, separate configurable QC",
+        "remaining": "Opt-in/diagnostic policies; no qualified active production hybrid candidate."
+      },
+      {
+        "phases": "12–14",
+        "implemented": "Physical mapping, simulated line-scan, calibrated seam grouping software",
+        "remaining": "Real factory calibration/camera/encoder/PLC/end-to-end acceptance not demonstrated."
+      },
+      {
+        "phases": "15",
+        "implemented": "CPU-tested profiling and bounded offline scheduler",
+        "remaining": "GPU contention/VRAM/production throughput not measured."
+      },
+      {
+        "phases": "16",
+        "implemented": "Actual supervised ONNX export/check/reload/inference/parity on CPU, fixed shapes",
+        "remaining": "Validated on synthetic fixtures/untrained decoder; a real candidate needs its own parity and representative-data evaluation."
+      },
+      {
+        "phases": "17",
+        "implemented": "NOT_STARTED",
+        "remaining": "CUDA/TensorRT performance work awaits explicit phase approval and capable hardware."
+      },
+      {
+        "phases": "18",
+        "implemented": "NOT_STARTED",
+        "remaining": "Configurable acceptance/release governance, fresh locked test and explicit registry activation flow still required."
+      }
+    ],
+    "production_accuracy_improvement_proven": false,
+    "next_required_evidence": [
+      "Verified real pixel labels and roll/lot/camera provenance, meaningful independent supervised training",
+      "Representative real-candidate/reference parity and physical camera/encoder calibration",
+      "Actual CUDA/TensorRT profiling only on supported hardware after Phase17 approval",
+      "Fresh locked test separate from historical postmortem set, configurable acceptance criteria and explicit release approval in Phase18"
+    ]
+  },
+  "references": [
+    {
+      "title": "ONNX Runtime Python API",
+      "url": "https://onnxruntime.ai/docs/api/python/api_summary.html"
+    },
+    {
+      "title": "ONNX checker",
+      "url": "https://onnx.ai/onnx/api/checker.html"
+    },
+    {
+      "title": "PyTorch exporter options (current documentation; installed Torch2.5.1 signature checked locally)",
+      "url": "https://docs.pytorch.org/tutorials/beginner/onnx/export_simple_model_to_onnx_tutorial.html?highlight=transformer"
+    }
+  ]
+}

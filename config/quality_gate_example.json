@@ -1,0 +1,12 @@
+{
+  "min_width": 64,
+  "min_height": 64,
+  "blur_threshold": 70.0,
+  "max_dark_ratio": 0.2,
+  "max_bright_ratio": 0.2,
+  "dark_pixel_threshold": 20,
+  "bright_pixel_threshold": 235,
+  "check_metadata": false,
+  "required_metadata": [],
+  "expected_camera_id": null
+}

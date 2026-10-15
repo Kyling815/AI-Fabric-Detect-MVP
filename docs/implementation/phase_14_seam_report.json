@@ -1,0 +1,2319 @@
+{
+  "phase": 14,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "status": "WAITING_FOR_USER_REVIEW",
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Standalone conservative calibrated bbox grouping and backward compatibility; not factory duplicate-detection accuracy, mask fusion, QC or production activation.",
+  "next_phase_started": false,
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "implementation": "SeamMerger",
+  "semantics": {
+    "calibration_required": true,
+    "adjacency": "Explicit unordered adjacent camera pairs; default empty means no guessed adjacency or automatic merge.",
+    "identity": "Same capture_group/fabric/verified lot+roll/frame index/typed transport position; aware timestamps within explicit tolerance.",
+    "classification": "Exact source_kind and label agreement, same model version/hash/reference declarations; no score averaging or highest-score suppression.",
+    "geometry": "Recompute mapped rectangles from source pixels and one calibration snapshot; clip to shared horizontal FOV, then require seam IoU and center distance.",
+    "grouping": "Connected match components merge only with one observation per camera, every member pair eligible (complete link), and no incident conflict/review warnings. Ambiguous/non-complete components remain separate.",
+    "lineage": "Every accepted observation retained exactly once in a group with original pixel candidate, raw score, source provenance, frame and independent mapping.",
+    "merged_geometry": "Envelope of original mapped bboxes, NOT mask union or measured defect area.",
+    "limits": "Explicit list/tuple input, default max128/hard max256; invalid/duplicate/over-limit batches raise ValueError without silent filtering/truncation.",
+    "business_qc": "affects_qc=false; diagnostic review is not GOOD/NEEDS_REVIEW/BAD."
+  },
+  "production_runtime_integrated": false,
+  "public_http_schema_changed": false,
+  "database_schema_changed": false,
+  "qc_policy_or_labels_changed": false,
+  "production_registry_modified": false,
+  "production_model_training_performed": false,
+  "real_data_accuracy_evaluated": false,
+  "real_calibration_verified": false,
+  "mask_union_implemented": false,
+  "profiling_or_async_scheduler_implemented": false,
+  "tests": {
+    "phase14": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_seam_contracts.py tests/test_seam_merger.py tests/test_seam_integration.py -q",
+      "passed": 104,
+      "warnings": 1,
+      "seconds": 4.59,
+      "by_file": {
+        "contracts": 35,
+        "merger": 55,
+        "integration": 14
+      }
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1553,
+      "warnings": 1,
+      "pytest_seconds": 119.6,
+      "exit_code": 0,
+      "previous_suite_count": 1449,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true,
+      "existing_cached_backbone_loaded_for_smoke": true
+    },
+    "new_test_failures": [],
+    "existing_tests_modified": false,
+    "existing_tests_broken": false,
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "warning": "Existing FAISS loader NumPy private-namespace deprecation."
+  },
+  "created_files": [
+    "backend/app/core/seam.py",
+    "backend/app/services/seam_merger.py",
+    "config/seam_merging_example.json",
+    "scripts/check_phase14_seam.py",
+    "tests/seam_fixtures.py",
+    "tests/test_seam_contracts.py",
+    "tests/test_seam_integration.py",
+    "tests/test_seam_merger.py",
+    "docs/implementation/phase_14_seam_merging.md",
+    "docs/implementation/phase_14_seam_report.json"
+  ],
+  "modified_existing_files": [],
+  "existing_files_audited": 339,
+  "unrelated_existing_files_unchanged": 339,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 7,
+      "insertions": 432,
+      "deletions": 101
+    },
+    "tracked_diff_changed_in_phase14": false,
+    "note": "Cumulative tracked diff belongs to prior phases and preexisting user binary; Phase 14 adds new untracked files only."
+  },
+  "demo": {
+    "phase": 14,
+    "status": "HYPOTHETICAL_SOFTWARE_CHECK_ONLY",
+    "case_count": 6,
+    "cases": [
+      {
+        "case": "same_defect_adjacent",
+        "expected_groups": 1,
+        "expected_merged_groups": 1,
+        "result": {
+          "status": "evaluated",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 42,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 42,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_right"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 2,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_9e5cb7eb37180e3dd1216bc310bc981582ad66cad5397ab07708129b87adbcd2",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": true,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": false,
+              "reasons": [
+                "CALIBRATED_SEAM_DUPLICATE"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": true,
+              "reason": "CALIBRATED_SEAM_DUPLICATE",
+              "seam_iou": 1,
+              "center_distance_mm": 0,
+              "review_required": false
+            }
+          ],
+          "issues": [],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "nearby_separate",
+        "expected_groups": 2,
+        "expected_merged_groups": 0,
+        "result": {
+          "status": "evaluated",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 42,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 12,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 42,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_right"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 2,
+                  "y": 12,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 115
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 116
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_75a2349e65263b5a7ada157fd952a2460b511c9a6f54fb7bc4fb40a2f417b89e",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": false,
+              "reasons": [
+                "NO_UNAMBIGUOUS_DUPLICATE"
+              ]
+            },
+            {
+              "group_id": "seam_7fe5239736e007c3bb2ebcf97b8888c84caea1290ecc36122ef7643525b1602c",
+              "member_ids": [
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 115
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 116
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": false,
+              "reasons": [
+                "NO_UNAMBIGUOUS_DUPLICATE"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": false,
+              "reason": "GEOMETRY_NOT_DUPLICATE",
+              "seam_iou": 0,
+              "center_distance_mm": 1,
+              "review_required": false
+            }
+          ],
+          "issues": [],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "conflicting_classes",
+        "expected_groups": 2,
+        "expected_merged_groups": 0,
+        "result": {
+          "status": "evaluated",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 42,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "scratch",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 42,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_right"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 2,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "scratch",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_75a2349e65263b5a7ada157fd952a2460b511c9a6f54fb7bc4fb40a2f417b89e",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "CLASS_OR_BRANCH_CONFLICT"
+              ]
+            },
+            {
+              "group_id": "seam_7fe5239736e007c3bb2ebcf97b8888c84caea1290ecc36122ef7643525b1602c",
+              "member_ids": [
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": false,
+              "label": "scratch",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "CLASS_OR_BRANCH_CONFLICT"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": false,
+              "reason": "CLASS_OR_BRANCH_CONFLICT",
+              "seam_iou": 1,
+              "center_distance_mm": 0,
+              "review_required": true
+            }
+          ],
+          "issues": [],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "edge_of_fov",
+        "expected_groups": 1,
+        "expected_merged_groups": 1,
+        "result": {
+          "status": "evaluated",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 46,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 2,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 6,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 46,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 2,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 23,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 24,
+                  "y_mm": 115
+                },
+                "width_mm": 1,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_right"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 6,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 23,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 25,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_9e5cb7eb37180e3dd1216bc310bc981582ad66cad5397ab07708129b87adbcd2",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": true,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 23,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 25,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": false,
+              "reasons": [
+                "CALIBRATED_SEAM_DUPLICATE"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": true,
+              "reason": "CALIBRATED_SEAM_DUPLICATE",
+              "seam_iou": 1,
+              "center_distance_mm": 0,
+              "review_required": false
+            }
+          ],
+          "issues": [],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "no_calibration",
+        "expected_groups": 2,
+        "expected_merged_groups": 0,
+        "result": {
+          "status": "unavailable",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": null,
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 42,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "unavailable",
+              "reason": "CALIBRATION_UNAVAILABLE",
+              "calibration": null,
+              "frame": null,
+              "point": null,
+              "candidate": null,
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "unavailable",
+              "reason": "CALIBRATION_UNAVAILABLE",
+              "calibration": null,
+              "frame": null,
+              "point": null,
+              "candidate": null,
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_034e2c1838abd0f0b94938459a0d989dcd088e2aff47c080cc0fe2922b0ad3bd",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": null,
+              "maximum": null,
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "CALIBRATION_UNAVAILABLE",
+                "PHYSICAL_MAPPING_UNAVAILABLE"
+              ]
+            },
+            {
+              "group_id": "seam_c75d3e9d786523b540465b6ede2abe18484fb695dd521587589b5c02466a979a",
+              "member_ids": [
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": null,
+              "maximum": null,
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "CALIBRATION_UNAVAILABLE",
+                "PHYSICAL_MAPPING_UNAVAILABLE"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": false,
+              "reason": "PHYSICAL_MAPPING_UNAVAILABLE",
+              "seam_iou": null,
+              "center_distance_mm": null,
+              "review_required": true
+            }
+          ],
+          "issues": [
+            "CALIBRATION_UNAVAILABLE"
+          ],
+          "affects_qc": false
+        }
+      },
+      {
+        "case": "ambiguous_one_to_many",
+        "expected_groups": 3,
+        "expected_merged_groups": 0,
+        "result": {
+          "status": "evaluated",
+          "policy": {
+            "policy_version": "seam_unapproved_starting_rules_v1",
+            "adjacent_camera_pairs": [
+              [
+                "lane_left",
+                "lane_right"
+              ]
+            ],
+            "minimum_seam_iou": 0.5,
+            "maximum_center_distance_mm": 1,
+            "maximum_time_delta_ms": 0,
+            "max_observations": 128
+          },
+          "calibration": {
+            "calibration_version": "hypothetical_linear_fixture_v1",
+            "world_frame_id": "hypothetical_roll_origin",
+            "transport": {
+              "encoder_id": "simulated_encoder",
+              "mm_per_encoder_count": 0.1,
+              "encoder_origin_count": 1000,
+              "mm_per_line": 0.25,
+              "line_origin_index": 0,
+              "y_origin_mm": 100,
+              "travel_direction": 1
+            },
+            "cameras": [
+              {
+                "camera_id": "lane_left",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 0,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              },
+              {
+                "camera_id": "lane_right",
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "pixel_convention": "pixel_edges",
+                "x_mm_per_pixel": 0.5,
+                "y_mm_per_pixel": 0.25,
+                "x_origin_mm": 20,
+                "y_offset_mm": 2,
+                "x_direction": 1,
+                "y_direction": 1
+              }
+            ]
+          },
+          "observations": [
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 42,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 8,
+                "candidate_id": "another",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            },
+            {
+              "capture_group_id": "hypothetical_capture_1",
+              "timestamp": "2026-10-15T02:00:00Z",
+              "source_kind": "supervised",
+              "model_version": "hypothetical_model_v1",
+              "reference_version": null,
+              "model_sha256": null,
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "candidate": {
+                "x": 2,
+                "y": 8,
+                "candidate_id": "candidate",
+                "w": 4,
+                "h": 4,
+                "label": "defect",
+                "score": 0.94,
+                "coordinate_frame": "oriented_source_pixels"
+              }
+            }
+          ],
+          "mappings": [
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_left",
+                "frame_id": "hypothetical_lane_left",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 42,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_right"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 2,
+                  "y": 8,
+                  "candidate_id": "another",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            },
+            {
+              "status": "mapped",
+              "reason": "EXPLICIT_LINEAR_CALIBRATION",
+              "calibration": {
+                "calibration_version": "hypothetical_linear_fixture_v1",
+                "world_frame_id": "hypothetical_roll_origin",
+                "transport": {
+                  "encoder_id": "simulated_encoder",
+                  "mm_per_encoder_count": 0.1,
+                  "encoder_origin_count": 1000,
+                  "mm_per_line": 0.25,
+                  "line_origin_index": 0,
+                  "y_origin_mm": 100,
+                  "travel_direction": 1
+                },
+                "cameras": [
+                  {
+                    "camera_id": "lane_left",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 0,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  },
+                  {
+                    "camera_id": "lane_right",
+                    "image_width": 48,
+                    "image_height": 32,
+                    "coordinate_frame": "oriented_source_pixels",
+                    "pixel_convention": "pixel_edges",
+                    "x_mm_per_pixel": 0.5,
+                    "y_mm_per_pixel": 0.25,
+                    "x_origin_mm": 20,
+                    "y_offset_mm": 2,
+                    "x_direction": 1,
+                    "y_direction": 1
+                  }
+                ]
+              },
+              "frame": {
+                "fabric_id": "hypothetical_fabric",
+                "camera_id": "lane_right",
+                "frame_id": "hypothetical_lane_right",
+                "frame_index": 1,
+                "image_width": 48,
+                "image_height": 32,
+                "coordinate_frame": "oriented_source_pixels",
+                "position": {
+                  "kind": "encoder_count",
+                  "encoder_id": "simulated_encoder",
+                  "frame_index": 1,
+                  "count": 1100,
+                  "simulated": true
+                },
+                "roll_id": "hypothetical_roll",
+                "lot_id": "hypothetical_lot"
+              },
+              "point": null,
+              "candidate": {
+                "source": {
+                  "x": 2,
+                  "y": 8,
+                  "candidate_id": "candidate",
+                  "w": 4,
+                  "h": 4,
+                  "label": "defect",
+                  "score": 0.94,
+                  "coordinate_frame": "oriented_source_pixels"
+                },
+                "minimum": {
+                  "x_mm": 21,
+                  "y_mm": 114
+                },
+                "maximum": {
+                  "x_mm": 23,
+                  "y_mm": 115
+                },
+                "width_mm": 2,
+                "length_mm": 1,
+                "overlap_camera_ids": [
+                  "lane_left"
+                ]
+              },
+              "mapping_model": "linear_axis_aligned_v1"
+            }
+          ],
+          "groups": [
+            {
+              "group_id": "seam_75a2349e65263b5a7ada157fd952a2460b511c9a6f54fb7bc4fb40a2f417b89e",
+              "member_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "AMBIGUOUS_MATCH_SET"
+              ]
+            },
+            {
+              "group_id": "seam_90423e0718bb568aec616fea21d613c251a6fd76af2995dd2d2edefb7b4e0296",
+              "member_ids": [
+                "obs_abce2114997fbe12b59f08c97518eb5f3ec96e829c7f974d990225d0506ca88b"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "AMBIGUOUS_MATCH_SET"
+              ]
+            },
+            {
+              "group_id": "seam_7fe5239736e007c3bb2ebcf97b8888c84caea1290ecc36122ef7643525b1602c",
+              "member_ids": [
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "merged": false,
+              "label": "defect",
+              "minimum": {
+                "x_mm": 21,
+                "y_mm": 114
+              },
+              "maximum": {
+                "x_mm": 23,
+                "y_mm": 115
+              },
+              "geometry_kind": "bbox_envelope_not_mask_union",
+              "review_required": true,
+              "reasons": [
+                "AMBIGUOUS_MATCH_SET"
+              ]
+            }
+          ],
+          "pairs": [
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_abce2114997fbe12b59f08c97518eb5f3ec96e829c7f974d990225d0506ca88b"
+              ],
+              "eligible": true,
+              "reason": "CALIBRATED_SEAM_DUPLICATE",
+              "seam_iou": 1,
+              "center_distance_mm": 0,
+              "review_required": false
+            },
+            {
+              "observation_ids": [
+                "obs_24927944830cc9a8a5f8566b735b37f1eaa3af401dfcdc863b850fb549ddd088",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": true,
+              "reason": "CALIBRATED_SEAM_DUPLICATE",
+              "seam_iou": 1,
+              "center_distance_mm": 0,
+              "review_required": false
+            },
+            {
+              "observation_ids": [
+                "obs_abce2114997fbe12b59f08c97518eb5f3ec96e829c7f974d990225d0506ca88b",
+                "obs_e3b2675d1dc507624fea7a27320342bfc5a75b564be456102e1126a9581a4ffc"
+              ],
+              "eligible": false,
+              "reason": "SAME_CAMERA",
+              "seam_iou": null,
+              "center_distance_mm": null,
+              "review_required": false
+            }
+          ],
+          "issues": [],
+          "affects_qc": false
+        }
+      }
+    ],
+    "production_runtime_integrated": false,
+    "models_trained_or_loaded": false,
+    "real_calibration_verified": false,
+    "mask_union_implemented": false,
+    "qc_changed": false,
+    "writes_performed": false,
+    "note": "Synthetic bbox grouping with exact source lineage. Starting match tolerances are NOT calibrated factory acceptance rules; envelope is not a mask/defect-area union. Phase 15 has not started."
+  },
+  "limitations": [
+    "Synthetic linear calibration and starting IoU/distance/time tolerances only; no real-world duplicate precision/recall or calibration residuals measured.",
+    "BBox matching only; supervised model-grid masks need a verified source-coordinate transform first. Envelope is not mask area or customer severity.",
+    "No same-camera tile NMS, rolling temporal tracking, greedy matching, score fusion or automatic suppression of conflicting classes.",
+    "All members must form an unambiguous complete-link camera group; transitive overlap chains and one-to-many matches remain separate for review.",
+    "Capture IDs, versions/hashes and transport/time metadata are caller declarations, not hardware synchronization/content/provenance attestation.",
+    "Exact count/position/frame identity and provenance matching may retain real duplicates across delayed/heterogeneous cameras.",
+    "Phase 13 bridge is explicit offline; partial chunk geometry must match a valid calibration, otherwise mapping remains unavailable.",
+    "No automatic API/SQLite/annotation/defect-count/QC changes, model activation or Phase 15 profiling/scheduler work."
+  ]
+}

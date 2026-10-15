@@ -1,0 +1,493 @@
+{
+  "provenance": {
+    "commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+    "captured_before_phase_1_refactor": true,
+    "fixture": "mock dense encoder + real FAISS, SQLite and current API",
+    "normalized_fields": [
+      "inspection_id",
+      "created_at",
+      "original_image_url",
+      "annotated_image_url"
+    ]
+  },
+  "common": {
+    "inspection_id": "<inspection_id>",
+    "fabric_id": "fixture_fabric",
+    "fabric_name": "Fixture Fabric",
+    "reference_id": "fixture_ref_v1",
+    "backbone_version": "shared_resnet18_imagenet1k_v1",
+    "final_result": "GOOD",
+    "anomaly_score": 1,
+    "reason": null,
+    "confidence": null,
+    "defect_area_ratio": 0.3333333333333333,
+    "defect_count": 1,
+    "boxes": [
+      {
+        "x": 32,
+        "y": 0,
+        "w": 16,
+        "h": 32,
+        "score": 1,
+        "label": "dense_anomaly"
+      }
+    ],
+    "original_image_url": "<original_image_url>",
+    "annotated_image_url": "<annotated_image_url>",
+    "image_metadata": {
+      "width": 48,
+      "height": 32,
+      "mode": "RGB",
+      "content_type": "image/png",
+      "file_size_bytes": 117
+    },
+    "preprocess_plan": {
+      "target_max_size": 768,
+      "original_width": 48,
+      "original_height": 32,
+      "resized_width": 48,
+      "resized_height": 32,
+      "scale": 1,
+      "patch_size": 96,
+      "patch_stride": 48,
+      "color_mode": "RGB"
+    },
+    "patch_grid": {
+      "image_width": 48,
+      "image_height": 32,
+      "patch_size": 48,
+      "patch_stride": 48,
+      "rows": 1,
+      "cols": 1,
+      "patch_count": 1,
+      "coverage_ratio": 1,
+      "sample_patches": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 32
+        }
+      ]
+    },
+    "embedding_summary": {
+      "model_name": "resnet18_layer2_layer3_dense",
+      "device": "cpu",
+      "requested_device": "auto",
+      "use_pretrained_weights": false,
+      "embedding_dim": 2,
+      "patch_count": 6,
+      "batch_size": 1,
+      "model_input_size": 24,
+      "l2_normalized": true
+    },
+    "anomaly_summary": {
+      "status": "scored",
+      "reference_version": "fixture_ref_v1",
+      "faiss_metric": "cosine",
+      "threshold": 1.1,
+      "patch_count": 6,
+      "suspicious_patch_count": 1,
+      "max_anomaly_score": 1,
+      "mean_anomaly_score": 0.1666666716337204,
+      "defect_area_ratio_estimate": 0.3333333333333333,
+      "sample_suspicious_patches": []
+    },
+    "model_version": "fixture_ref_v1",
+    "created_at": "<created_at>"
+  },
+  "cases": {
+    "good": {
+      "thresholds": {
+        "image_score_method": "max",
+        "image_review_threshold": 1.1,
+        "image_bad_threshold": 1.2,
+        "pixel_threshold": 0.5,
+        "minimum_defect_area": 1
+      },
+      "post_overrides": {},
+      "get_overrides": {
+        "embedding_summary": null,
+        "anomaly_summary": null
+      }
+    },
+    "review_without_box": {
+      "thresholds": {
+        "image_score_method": "max",
+        "image_review_threshold": 0.1,
+        "image_bad_threshold": 0.9,
+        "pixel_threshold": 1.1,
+        "minimum_defect_area": 1
+      },
+      "post_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "ANOMALY_WITHOUT_LOCALIZATION",
+        "defect_area_ratio": 0,
+        "defect_count": 0,
+        "boxes": [],
+        "anomaly_summary": {
+          "status": "scored",
+          "reference_version": "fixture_ref_v1",
+          "faiss_metric": "cosine",
+          "threshold": 0.1,
+          "patch_count": 6,
+          "suspicious_patch_count": 0,
+          "max_anomaly_score": 1,
+          "mean_anomaly_score": 0.1666666716337204,
+          "defect_area_ratio_estimate": 0,
+          "sample_suspicious_patches": []
+        }
+      },
+      "get_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "ANOMALY_WITHOUT_LOCALIZATION",
+        "defect_area_ratio": 0,
+        "defect_count": 0,
+        "boxes": [],
+        "embedding_summary": null,
+        "anomaly_summary": null
+      }
+    },
+    "bad": {
+      "thresholds": {
+        "image_score_method": "max",
+        "image_review_threshold": 0.1,
+        "image_bad_threshold": 0.9,
+        "pixel_threshold": 0.5,
+        "minimum_defect_area": 1
+      },
+      "post_overrides": {
+        "final_result": "BAD",
+        "anomaly_summary": {
+          "status": "scored",
+          "reference_version": "fixture_ref_v1",
+          "faiss_metric": "cosine",
+          "threshold": 0.1,
+          "patch_count": 6,
+          "suspicious_patch_count": 1,
+          "max_anomaly_score": 1,
+          "mean_anomaly_score": 0.1666666716337204,
+          "defect_area_ratio_estimate": 0.3333333333333333,
+          "sample_suspicious_patches": []
+        }
+      },
+      "get_overrides": {
+        "final_result": "BAD",
+        "embedding_summary": null,
+        "anomaly_summary": null
+      }
+    },
+    "review_below_bad": {
+      "thresholds": {
+        "image_score_method": "max",
+        "image_review_threshold": 0.1,
+        "image_bad_threshold": 1.2,
+        "pixel_threshold": 0.5,
+        "minimum_defect_area": 1
+      },
+      "post_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "ANOMALY_BELOW_BAD_THRESHOLD",
+        "anomaly_summary": {
+          "status": "scored",
+          "reference_version": "fixture_ref_v1",
+          "faiss_metric": "cosine",
+          "threshold": 0.1,
+          "patch_count": 6,
+          "suspicious_patch_count": 1,
+          "max_anomaly_score": 1,
+          "mean_anomaly_score": 0.1666666716337204,
+          "defect_area_ratio_estimate": 0.3333333333333333,
+          "sample_suspicious_patches": []
+        }
+      },
+      "get_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "ANOMALY_BELOW_BAD_THRESHOLD",
+        "embedding_summary": null,
+        "anomaly_summary": null
+      }
+    },
+    "review_localized": {
+      "thresholds": {
+        "image_score_method": "max",
+        "image_review_threshold": 1.1,
+        "image_bad_threshold": 1.2,
+        "pixel_threshold": 0.5,
+        "minimum_defect_area": 1,
+        "localized_review_threshold": 0.9
+      },
+      "post_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "STRONG_LOCALIZED_ANOMALY"
+      },
+      "get_overrides": {
+        "final_result": "NEEDS_REVIEW",
+        "reason": "STRONG_LOCALIZED_ANOMALY",
+        "embedding_summary": null,
+        "anomaly_summary": null
+      }
+    }
+  },
+  "openapi_inspect": {
+    "post": {
+      "tags": [
+        "inspections"
+      ],
+      "summary": "Inspect Image",
+      "operationId": "inspect_image_api_inspect_post",
+      "requestBody": {
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "$ref": "#/components/schemas/Body_inspect_image_api_inspect_post"
+            }
+          }
+        },
+        "required": true
+      },
+      "responses": {
+        "201": {
+          "description": "Successful Response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionCreateResponse"
+              }
+            }
+          }
+        },
+        "422": {
+          "description": "Validation Error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HTTPValidationError"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "response_schema": {
+    "properties": {
+      "inspection_id": {
+        "type": "string",
+        "title": "Inspection Id"
+      },
+      "fabric_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Fabric Id"
+      },
+      "fabric_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Fabric Name"
+      },
+      "reference_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Reference Id"
+      },
+      "backbone_version": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Backbone Version"
+      },
+      "final_result": {
+        "type": "string",
+        "title": "Final Result"
+      },
+      "anomaly_score": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Anomaly Score"
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Reason"
+      },
+      "confidence": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Confidence"
+      },
+      "defect_area_ratio": {
+        "type": "number",
+        "title": "Defect Area Ratio"
+      },
+      "defect_count": {
+        "type": "integer",
+        "title": "Defect Count"
+      },
+      "boxes": {
+        "items": {
+          "$ref": "#/components/schemas/DefectBox"
+        },
+        "type": "array",
+        "title": "Boxes"
+      },
+      "original_image_url": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Original Image Url"
+      },
+      "annotated_image_url": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Annotated Image Url"
+      },
+      "image_metadata": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ImageMetadata"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "preprocess_plan": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/PreprocessPlan"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "patch_grid": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/PatchGridSummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "embedding_summary": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/EmbeddingSummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "anomaly_summary": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/AnomalySummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_version": {
+        "type": "string",
+        "title": "Model Version"
+      },
+      "created_at": {
+        "anyOf": [
+          {
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Created At"
+      }
+    },
+    "type": "object",
+    "required": [
+      "inspection_id",
+      "final_result",
+      "defect_area_ratio",
+      "defect_count",
+      "model_version"
+    ],
+    "title": "InspectionCreateResponse"
+  },
+  "request_schema": {
+    "properties": {
+      "image": {
+        "type": "string",
+        "format": "binary",
+        "title": "Image"
+      },
+      "fabric_id": {
+        "type": "string",
+        "title": "Fabric Id"
+      }
+    },
+    "type": "object",
+    "required": [
+      "image",
+      "fabric_id"
+    ],
+    "title": "Body_inspect_image_api_inspect_post"
+  }
+}

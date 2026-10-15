@@ -1,0 +1,16 @@
+{
+  "simulation_id": "hypothetical_scan_v1",
+  "fabric_id": "hypothetical_fabric",
+  "lot_id": "hypothetical_lot",
+  "roll_id": "hypothetical_roll",
+  "camera_ids": ["lane_1", "lane_2", "lane_3", "lane_4"],
+  "image_width": 48,
+  "chunk_height": 8,
+  "total_lines": 19,
+  "encoder_id": "simulated_encoder",
+  "encoder_start_count": 1000,
+  "counts_per_line": 2,
+  "start_timestamp": "2026-10-15T09:00:00+07:00",
+  "line_period_us": 1000,
+  "queue_capacity": 1
+}

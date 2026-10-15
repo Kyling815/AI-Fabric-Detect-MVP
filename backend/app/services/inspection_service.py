@@ -1,5 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
+import logging
+import threading
 from uuid import uuid4
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -9,16 +11,27 @@ from pathlib import Path
 import numpy as np
 
 from backend.app.ai.anomaly_detector import AnomalyDetectionResult, FaissAnomalyDetector, ReferenceNotReadyError
+from backend.app.ai.anomaly_branch import AnomalyDetector
 from backend.app.ai.bbox import MergedBox, localize_pixel_defects, localize_suspicious_patches
 from backend.app.ai.classifier import classify_inspection
-from backend.app.ai.dense_anomaly import DenseReferenceDetector
-from backend.app.ai.dense_feature_extractor import get_shared_dense_extractor
-from backend.app.ai.fabric_decision import decide_fabric_inspection
+from backend.app.ai.current_anomaly import CurrentAnomalyDetector, InvalidFabricReferenceError
+from backend.app.ai.pattern_period import PatternPeriodEstimator, PatternPeriodResult
+from backend.app.ai.fabric_decision import FabricDecision, decide_fabric_inspection
+from backend.app.ai.fusion import FusionEngine, fusion_failure
+from backend.app.ai.fusion_adapter import fusion_inputs_from_inspection
+from backend.app.ai.quality_gate import ImageQualityGate, InvalidCaptureError, QualityGate, QualityGateResult
 from backend.app.ai.patching import ImagePatch, PatchGrid, build_patch_grid
 from backend.app.ai.preprocess import ImageReadError, build_preprocess_plan, inspect_image_file
 from backend.app.ai.preprocessing.adapter import CoordinateTransform, PreparedImage, configuration_from_reference_metadata, prepare_image
 from backend.app.core.config import get_settings
+from backend.app.core.acquisition import AcquisitionMetadata, QualityGateConfig
+from backend.app.core.inspection_contracts import InspectionContext, InspectionInput, InspectionResult
+from backend.app.core.pattern import PatternEstimatorConfig
+from backend.app.core.segmentation_shadow import SupervisedShadowConfig, SupervisedShadowObservation
+from backend.app.core.fusion import DefectEvidence, FusionPolicy
+from backend.app.core.qc import QCDecision, QCPolicy
 from backend.app.core.paths import resolve_project_path
+from backend.app.core.runtime_profiling import RuntimeProfiler, current_profiler, runtime_stage
 from backend.app.db import crud
 from backend.app.db.models import DetectedDefect, Inspection
 from backend.app.db.schemas import (
@@ -37,7 +50,17 @@ from backend.app.db.schemas import (
 from backend.app.services.storage_service import StorageService, UploadTooLargeError
 from backend.app.services.fabric_registry import FabricRegistry, FabricRegistryError
 from backend.app.services.reference_registry import ReferenceRegistry
+from backend.app.services.segmentation_shadow import ProcessSupervisedShadowRunner, SupervisedShadowRunner
+from backend.app.services.qc_decision import QCDecisionEngine, qc_failure, qc_input_from_evidence
 from backend.app.utils.visualization import save_annotated_image
+
+
+logger = logging.getLogger(__name__)
+shadow_audit_logger = logging.getLogger("backend.supervised_shadow.audit")
+fusion_audit_logger = logging.getLogger("backend.hybrid_fusion.audit")
+qc_audit_logger = logging.getLogger("backend.hybrid_qc.audit")
+runtime_audit_logger = logging.getLogger("backend.runtime_profile.audit")
+_shadow_log_lock = threading.Lock()
 
 
 @dataclass(frozen=True)
@@ -66,21 +89,28 @@ class RuntimeReferenceContext:
 
 
 class InspectionService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, *, anomaly_detector: AnomalyDetector | None = None,
+                 quality_gate: QualityGate | None = None,
+                 pattern_estimator: PatternPeriodEstimator | None = None,
+                 supervised_shadow: SupervisedShadowRunner | None = None,
+                 fusion_engine: FusionEngine | None = None,
+                 qc_engine: QCDecisionEngine | None = None) -> None:
         self.db = db
         self.storage = StorageService()
         self.settings = get_settings()
+        self.anomaly_detector = anomaly_detector if anomaly_detector is not None else CurrentAnomalyDetector()
+        self.quality_gate = quality_gate if quality_gate is not None else ImageQualityGate()
+        self.pattern_estimator = pattern_estimator if pattern_estimator is not None else PatternPeriodEstimator()
+        self.supervised_shadow = supervised_shadow if supervised_shadow is not None else ProcessSupervisedShadowRunner()
+        self.fusion_engine = fusion_engine
+        self.qc_engine = qc_engine
 
-    def create_fabric_inspection(self, image: UploadFile, fabric_id: str) -> InspectionCreateResponse:
+    def create_fabric_inspection(self, image: UploadFile, fabric_id: str, *,
+                                 metadata: AcquisitionMetadata | None = None) -> InspectionCreateResponse:
         """Run the demo dense-anomaly pipeline against exactly one active fabric reference."""
-        try:
-            registry = FabricRegistry()
-            reference = registry.get_active_reference(fabric_id)
-        except FabricRegistryError as exc:
-            status_code = 400 if str(exc).startswith("Unknown fabric_id") else 409
-            raise HTTPException(status_code=status_code, detail=str(exc)) from exc
-
-        backbone = registry.shared_backbone
+        context = self._resolve_fabric_context(fabric_id)
+        reference = context.reference
+        backbone = context.backbone
         try:
             stored_upload = self.storage.save_upload(image)
         except UploadTooLargeError as exc:
@@ -89,55 +119,35 @@ class InspectionService:
         annotated = None
         persisted = False
         try:
+            inspection_input = InspectionInput(
+                image_path=stored_upload.absolute_path, fabric_id=fabric_id,
+                metadata=metadata if metadata is not None else AcquisitionMetadata(),
+            )
+            try:
+                quality = self._evaluate_capture(inspection_input, context)
+            except InvalidCaptureError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
             try:
                 image_info = inspect_image_file(stored_upload.absolute_path)
             except ImageReadError as exc:
                 raise HTTPException(status_code=400, detail="Uploaded file could not be decoded as an image.") from exc
 
-            extractor = get_shared_dense_extractor(
-                str(backbone["backbone_version"]),
-                self.settings.device,
-                bool(backbone.get("use_pretrained_weights", True)),
-                str(resolve_project_path(backbone["adapter_path"])) if backbone.get("adapter_path") else "",
-            )
-            features = extractor.extract_path(
-                stored_upload.absolute_path,
-                image_max_size=int(backbone.get("image_max_size", self.settings.image_max_size)),
-            )
             try:
-                detector = DenseReferenceDetector(reference.metadata_path)
-                anomaly = detector.score(
-                    features.embeddings,
-                    features.boxes,
-                    grid_rows=features.grid_rows,
-                    grid_cols=features.grid_cols,
-                    image_width=features.processed_width,
-                    image_height=features.processed_height,
-                    thresholds=reference.thresholds,
+                result = self._inspect_fabric(
+                    inspection_input, context, quality_gate_result=quality,
                 )
-            except (OSError, KeyError, ValueError) as exc:
+            except InvalidFabricReferenceError as exc:
                 raise HTTPException(
                     status_code=409,
                     detail=f"Active fabric reference is invalid or incompatible: {exc}",
                 ) from exc
 
-            original_boxes = self._map_dense_boxes_to_original(
-                list(anomaly.boxes),
-                scale=features.scale,
-                width=features.original_width,
-                height=features.original_height,
-            )
-            decision = decide_fabric_inspection(
-                image_score=anomaly.image_score,
-                boxes=original_boxes,
-                thresholds=reference.thresholds,
-                localized_score=anomaly.localized_score,
-            )
-            defect_area_ratio = self._box_area_ratio(
-                original_boxes,
-                features.original_width,
-                features.original_height,
-            )
+            features = result.evidence.features
+            extractor_info = result.evidence.extractor_info
+            anomaly = result.evidence.anomaly
+            original_boxes = list(result.candidates)
+            decision = result.decision
+            defect_area_ratio = result.defect_area_ratio
             inspection_id = str(uuid4())
             annotated = self.storage.annotated_output_for(inspection_id, image.filename or "upload.jpg")
             save_annotated_image(stored_upload.absolute_path, original_boxes, annotated.absolute_path)
@@ -167,15 +177,22 @@ class InspectionService:
             defects = self._detected_defects(inspection.id, original_boxes)
             inspection = crud.create_inspection_with_defects(self.db, inspection, defects)
             persisted = True
+            self._log_supervised_shadow(result.known_defects_shadow, inspection_id=inspection_id,
+                                        fabric_id=fabric_id, reference_id=reference.reference_id)
+            self._log_fusion(result.defect_evidence, inspection_id=inspection_id,
+                             fabric_id=fabric_id, legacy_qc_label=(result.legacy_decision or decision).label,
+                             hybrid_qc_active=bool(result.qc_evaluation and result.qc_evaluation.applied))
+            self._log_qc(result.qc_evaluation, inspection_id=inspection_id, fabric_id=fabric_id,
+                         legacy_label=(result.legacy_decision or decision).label, selected_label=decision.label)
             pixel_threshold = float(reference.thresholds["pixel_threshold"])
             return self._to_response(
                 inspection,
                 embedding_summary=EmbeddingSummary(
-                    model_name=extractor.info.architecture,
-                    device=extractor.info.device,
+                    model_name=extractor_info.architecture,
+                    device=extractor_info.device,
                     requested_device=self.settings.device,
-                    use_pretrained_weights=extractor.info.use_pretrained_weights,
-                    embedding_dim=extractor.info.feature_dim,
+                    use_pretrained_weights=extractor_info.use_pretrained_weights,
+                    embedding_dim=extractor_info.feature_dim,
                     patch_count=int(features.embeddings.shape[0]),
                     batch_size=1,
                     model_input_size=int(backbone.get("image_max_size", self.settings.image_max_size)),
@@ -200,6 +217,358 @@ class InspectionService:
                 if annotated is not None:
                     self.storage.delete_stored_file(annotated.relative_path)
             raise
+
+    def _resolve_fabric_context(self, fabric_id: str) -> InspectionContext:
+        try:
+            registry = FabricRegistry()
+            reference = registry.get_active_reference(fabric_id)
+        except FabricRegistryError as exc:
+            status_code = 400 if str(exc).startswith("Unknown fabric_id") else 409
+            raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+        quality_config = self._quality_gate_policy(registry, fabric_id)
+        pattern_config, pattern_error = self._pattern_observation_policy(registry, fabric_id)
+        shadow_config, shadow_error = self._supervised_shadow_policy(registry, fabric_id)
+        fusion_policy, fusion_error = self._fusion_policy(registry, fabric_id)
+        qc_policy, qc_error, qc_mode = self._hybrid_qc_policy(registry, fabric_id)
+        return InspectionContext(
+            reference=reference,
+            backbone=registry.shared_backbone,
+            device=self.settings.device,
+            default_image_max_size=self.settings.image_max_size,
+            quality_gate_config=quality_config,
+            pattern_estimator_config=pattern_config,
+            pattern_observation_error=pattern_error,
+            supervised_shadow_config=shadow_config,
+            supervised_shadow_error=shadow_error,
+            fusion_policy=fusion_policy,
+            fusion_error=fusion_error,
+            qc_policy=qc_policy,
+            qc_policy_error=qc_error,
+            hybrid_qc_mode=qc_mode,
+        )
+
+    def _hybrid_qc_policy(self, registry, fabric_id):
+        mode = self.settings.hybrid_qc_mode if self.settings.hybrid_qc_enabled else "observe_only"
+        try:
+            override = registry.get_fabric(fabric_id).get("qc", {})
+            if not isinstance(override, dict):
+                raise ValueError("fabric qc must be an object")
+            enabled = override.get("enabled", self.settings.hybrid_qc_enabled)
+            if type(enabled) is not bool:
+                mode = "enforce"  # Ambiguous enabled control must not silently retain a GOOD acceptance.
+                raise ValueError("qc.enabled must be a boolean")
+            if not enabled:
+                return None, None, "observe_only"
+            mode = override.get("mode", self.settings.hybrid_qc_mode)
+            if type(mode) is not str or mode not in {"observe_only", "enforce"}:
+                mode = "enforce"
+                raise ValueError("Unsupported QC runtime mode")
+            values = {}
+            if self.settings.hybrid_qc_config_path:
+                values = json.loads(resolve_project_path(self.settings.hybrid_qc_config_path).read_text(encoding="utf-8"))
+                if not isinstance(values, dict):
+                    raise ValueError("QC policy must be an object")
+            values.update({key: value for key, value in override.items() if key not in {"enabled", "mode"}})
+            policy = QCPolicy.model_validate(values)
+            if mode == "enforce" and not policy.allowed_fabric_ids:
+                raise ValueError("Enforcement requires an explicit fabric scope")
+            return policy, None, mode
+        except Exception:
+            return None, "QC_CONFIGURATION_ERROR", mode
+
+    def _evaluate_hybrid_qc(self, fabric_id, context, fused):
+        if context.qc_policy is None and context.qc_policy_error is None:
+            return None
+        try:
+            if context.qc_policy_error is not None:
+                result = qc_failure("CONFIGURATION_ERROR")
+            else:
+                inputs = qc_input_from_evidence(fabric_id, fused)
+                result = (self.qc_engine or QCDecisionEngine(context.qc_policy)).evaluate(inputs)
+                result = QCDecision.model_validate(result.model_dump())
+                if result.policy != context.qc_policy:
+                    raise ValueError("QC evaluation policy mismatch")
+        except Exception:
+            result = qc_failure("EVALUATION_ERROR")
+        fields = result.model_dump()
+        fields.update(runtime_mode=context.hybrid_qc_mode, applied=context.hybrid_qc_mode == "enforce")
+        return QCDecision.model_validate(fields)
+
+    def _log_qc(self, result, *, inspection_id, fabric_id, legacy_label, selected_label):
+        if result is None:
+            return
+        try:
+            payload = {"inspection_id": inspection_id, "fabric_id": fabric_id, "legacy_qc_label": legacy_label,
+                       "selected_qc_label": selected_label, "qc_evaluation": result.model_dump(mode="json")}
+            with _shadow_log_lock:
+                qc_audit_logger.setLevel(logging.INFO)
+                if not qc_audit_logger.hasHandlers():
+                    handler = logging.StreamHandler()
+                    handler.setFormatter(logging.Formatter("%(message)s"))
+                    qc_audit_logger.addHandler(handler)
+            qc_audit_logger.info("qc_evaluation %s", json.dumps(payload, ensure_ascii=True, allow_nan=False), extra={"qc_evaluation": payload})
+        except Exception:
+            pass
+
+    def _fusion_policy(self, registry: FabricRegistry, fabric_id: str) -> tuple[FusionPolicy | None, str | None]:
+        try:
+            override = registry.get_fabric(fabric_id).get("fusion", {})
+            if not isinstance(override, dict):
+                raise ValueError("fabric fusion must be an object")
+            enabled = override.get("enabled", self.settings.fusion_enabled)
+            if type(enabled) is not bool:
+                raise ValueError("fusion.enabled must be a boolean")
+            if not enabled:
+                return None, None
+            values = {}
+            if self.settings.fusion_config_path:
+                values = json.loads(resolve_project_path(self.settings.fusion_config_path).read_text(encoding="utf-8"))
+                if not isinstance(values, dict):
+                    raise ValueError("Fusion configuration must be an object")
+            values.update({key: value for key, value in override.items() if key != "enabled"})
+            return FusionPolicy.model_validate(values), None
+        except Exception:
+            return None, "fusion_configuration_error"
+
+    def _fuse_evidence(self, inspection, context, evidence, original_boxes, quality, shadow) -> DefectEvidence | None:
+        if context.fusion_error is not None:
+            return fusion_failure("fusion_configuration_error")
+        if context.fusion_policy is None:
+            return None
+        try:
+            supervised, anomaly, capture = fusion_inputs_from_inspection(inspection, context, evidence, original_boxes, quality, shadow)
+            result = (self.fusion_engine or FusionEngine(context.fusion_policy)).fuse(supervised, anomaly, capture=capture)
+            result = DefectEvidence.model_validate(result.model_dump())
+            if result.policy != context.fusion_policy:
+                raise ValueError("Fusion output policy does not match configuration")
+            return result
+        except Exception:
+            return fusion_failure("fusion_engine_error")
+
+    def _log_fusion(self, result: DefectEvidence | None, *, inspection_id: str, fabric_id: str, legacy_qc_label: str, hybrid_qc_active: bool = False):
+        if result is None:
+            return
+        try:
+            payload = {"inspection_id": inspection_id, "fabric_id": fabric_id, "qc_source": "hybrid_qc" if hybrid_qc_active else "legacy_anomaly",
+                       "legacy_qc_label": legacy_qc_label, "hybrid_qc_active": hybrid_qc_active,
+                       "anomaly_box_count": len(result.anomaly_boxes), "defect_evidence": result.model_dump(mode="json", exclude={"anomaly_boxes"})}
+            with _shadow_log_lock:
+                fusion_audit_logger.setLevel(logging.INFO)
+                if not fusion_audit_logger.hasHandlers():
+                    handler = logging.StreamHandler()
+                    handler.setFormatter(logging.Formatter("%(message)s"))
+                    fusion_audit_logger.addHandler(handler)
+            fusion_audit_logger.info("defect_evidence %s", json.dumps(payload, ensure_ascii=True, allow_nan=False), extra={"defect_evidence": payload})
+        except Exception:
+            pass  # Diagnostic logging is not a business/QC decision or a persistence prerequisite.
+
+    def _supervised_shadow_policy(self, registry: FabricRegistry, fabric_id: str
+                                  ) -> tuple[SupervisedShadowConfig | None, str | None]:
+        """Bad optional shadow configuration never invalidates the active anomaly reference."""
+        try:
+            override = registry.get_fabric(fabric_id).get("supervised", {})
+            if not isinstance(override, dict):
+                raise ValueError("fabric supervised must be an object")
+            enabled = override.get("enabled", self.settings.supervised_shadow_enabled)
+            if type(enabled) is not bool:
+                raise ValueError("supervised.enabled must be a boolean")
+            if not enabled:
+                return None, None  # Do not open files, load a model or spawn a process when OFF.
+            values = {}
+            if self.settings.supervised_shadow_config_path:
+                values = json.loads(resolve_project_path(self.settings.supervised_shadow_config_path).read_text(encoding="utf-8"))
+                if not isinstance(values, dict):
+                    raise ValueError("Shadow configuration must be an object")
+            values.update({key: value for key, value in override.items() if key != "enabled"})
+            return SupervisedShadowConfig.model_validate(values), None
+        except Exception:
+            return None, "configuration_error"
+
+    def _observe_supervised_shadow(self, inspection: InspectionInput, context: InspectionContext
+                                   ) -> SupervisedShadowObservation | None:
+        if context.supervised_shadow_error is not None:
+            return SupervisedShadowObservation(status="configuration_error", reason="configuration_error")
+        if context.supervised_shadow_config is None:
+            return None
+        try:
+            observation = self.supervised_shadow.observe(inspection.image_path, inspection.fabric_id, context.supervised_shadow_config)
+            # Validate even injected/test runners; no malformed shadow payload may break a valid inspection.
+            observation = SupervisedShadowObservation.model_validate(observation.model_dump())
+            config = context.supervised_shadow_config
+            if observation.requested_model_version != config.expected_model_version or (observation.status == "observed" and (
+                    observation.checkpoint_sha256 != config.checkpoint_sha256 or inspection.fabric_id not in config.allowed_fabric_ids
+                    or not config.trusted_local or (observation.synthetic_checkpoint and not config.allow_synthetic))):
+                raise ValueError("Shadow output does not match configured provenance")
+            return observation
+        except Exception:
+            return SupervisedShadowObservation(status="error", reason="observer_error",
+                                                requested_model_version=context.supervised_shadow_config.expected_model_version)
+
+    def _log_supervised_shadow(self, observation: SupervisedShadowObservation | None, *,
+                               inspection_id: str, fabric_id: str, reference_id: str) -> None:
+        if observation is None:
+            return
+        try:
+            payload = {"inspection_id": inspection_id, "fabric_id": fabric_id,
+                       "anomaly_reference_id": reference_id, **observation.audit_payload()}
+            with _shadow_log_lock:
+                shadow_audit_logger.setLevel(logging.INFO)
+                if not shadow_audit_logger.hasHandlers():
+                    # Uvicorn does not necessarily configure the root logger. No global/root change.
+                    handler = logging.StreamHandler()
+                    handler.setFormatter(logging.Formatter("%(message)s"))
+                    shadow_audit_logger.addHandler(handler)
+            shadow_audit_logger.info("known_defects_shadow %s", json.dumps(payload, ensure_ascii=True, allow_nan=False),
+                                     extra={"known_defects_shadow": payload})
+        except Exception:
+            pass  # Optional diagnostics/log-sink failure must not turn persisted inspection into HTTP 500.
+
+    def _pattern_observation_policy(self, registry: FabricRegistry, fabric_id: str
+                                    ) -> tuple[PatternEstimatorConfig | None, str | None]:
+        """Observation misconfiguration must never reject an otherwise valid inspection."""
+        try:
+            override = registry.get_fabric(fabric_id).get("pattern_estimator", {})
+            if not isinstance(override, dict):
+                raise ValueError("fabric pattern_estimator must be an object")
+            enabled = override.get("enabled", self.settings.pattern_estimator_enabled)
+            if not isinstance(enabled, bool):
+                raise ValueError("pattern_estimator.enabled must be a boolean")
+            if not enabled:
+                return None, None
+            values = {}
+            if self.settings.pattern_estimator_config_path:
+                values = json.loads(resolve_project_path(self.settings.pattern_estimator_config_path).read_text(encoding="utf-8"))
+                if not isinstance(values, dict):
+                    raise ValueError("pattern estimator configuration must be an object")
+            values.update({key: value for key, value in override.items() if key != "enabled"})
+            return PatternEstimatorConfig.model_validate(values), None
+        except (OSError, ValueError):
+            logger.warning("Pattern observation configuration unavailable: fabric_id=%s", fabric_id)
+            return None, "configuration_error"
+
+    def _observe_pattern(self, inspection: InspectionInput, context: InspectionContext
+                         ) -> PatternPeriodResult | None:
+        if context.pattern_observation_error is not None:
+            return PatternPeriodResult(reason=context.pattern_observation_error)
+        if context.pattern_estimator_config is None:
+            return None
+        try:
+            observation = self.pattern_estimator.estimate_path(inspection.image_path, context.pattern_estimator_config)
+            logger.info(
+                "Pattern observation: fabric_id=%s period_x_px=%s period_y_px=%s confidence=%.3f is_periodic=%s",
+                inspection.fabric_id, observation.period_x_px, observation.period_y_px,
+                observation.confidence, observation.is_periodic,
+            )
+            return observation
+        except Exception:
+            logger.warning("Pattern observation failed: fabric_id=%s", inspection.fabric_id)
+            return PatternPeriodResult(reason="observer_error")
+
+    def _quality_gate_policy(self, registry: FabricRegistry, fabric_id: str) -> QualityGateConfig | None:
+        try:
+            override = registry.get_fabric(fabric_id).get("quality_gate", {})
+            if not isinstance(override, dict):
+                raise ValueError("fabric quality_gate must be an object")
+            enabled = override.get("enabled", self.settings.quality_gate_enabled)
+            if not isinstance(enabled, bool):
+                raise ValueError("quality_gate.enabled must be a boolean")
+            if not enabled:
+                return None
+            values = {}
+            if self.settings.quality_gate_config_path:
+                values = json.loads(resolve_project_path(self.settings.quality_gate_config_path).read_text(encoding="utf-8"))
+                if not isinstance(values, dict):
+                    raise ValueError("quality gate configuration must be an object")
+            values.update({key: value for key, value in override.items() if key != "enabled"})
+            return QualityGateConfig.model_validate(values)
+        except (OSError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail=f"Invalid quality gate configuration: {exc}") from exc
+
+    def _evaluate_capture(self, inspection: InspectionInput, context: InspectionContext) -> QualityGateResult | None:
+        if context.quality_gate_config is None:
+            return None
+        result = self.quality_gate.evaluate(inspection, context.quality_gate_config)
+        if not result.valid:
+            raise InvalidCaptureError(result)
+        return result
+
+    def _inspect_fabric(self, inspection: InspectionInput, context: InspectionContext, *,
+                        quality_gate_result: QualityGateResult | None = None) -> InspectionResult:
+        if not self.settings.runtime_profiling_enabled or current_profiler() is not None:
+            return self._inspect_fabric_core(inspection, context, quality_gate_result=quality_gate_result)
+        profiler = RuntimeProfiler(device=context.device)
+        try:
+            with profiler:
+                result = self._inspect_fabric_core(inspection, context, quality_gate_result=quality_gate_result)
+            return replace(result, runtime_profile=profiler.profile)
+        finally:
+            # Internal diagnostic only. Logging failures never affect inspection/cleanup.
+            try:
+                payload = profiler.profile.to_dict()
+                with _shadow_log_lock:
+                    runtime_audit_logger.setLevel(logging.INFO)
+                    if not runtime_audit_logger.hasHandlers():
+                        handler = logging.StreamHandler()
+                        handler.setFormatter(logging.Formatter("%(message)s"))
+                        runtime_audit_logger.addHandler(handler)
+                runtime_audit_logger.info("runtime_profile %s", json.dumps(payload, allow_nan=False), extra={"runtime_profile": payload})
+            except Exception:
+                pass
+
+    def _inspect_fabric_core(self, inspection: InspectionInput, context: InspectionContext, *,
+                             quality_gate_result: QualityGateResult | None = None) -> InspectionResult:
+        """Generate evidence, then apply the existing localization and QC policy."""
+        if quality_gate_result is None:
+            with runtime_stage("preprocessing"):
+                quality_gate_result = self._evaluate_capture(inspection, context)
+        elif not quality_gate_result.valid:
+            raise InvalidCaptureError(quality_gate_result)
+        with runtime_stage("anomaly"):
+            evidence = self.anomaly_detector.inspect(inspection, context)
+        features = evidence.features
+        anomaly = evidence.anomaly
+        with runtime_stage("postprocessing"):
+            original_boxes = self._map_dense_boxes_to_original(
+                list(anomaly.boxes), scale=features.scale,
+                width=features.original_width, height=features.original_height,
+            )
+            decision = decide_fabric_inspection(
+                image_score=anomaly.image_score, boxes=original_boxes,
+                thresholds=context.reference.thresholds, localized_score=anomaly.localized_score,
+            )
+        if context.pattern_estimator_config is not None or context.pattern_observation_error is not None:
+            with runtime_stage("preprocessing"):
+                pattern = self._observe_pattern(inspection, context)
+        else:
+            pattern = self._observe_pattern(inspection, context)
+        if context.supervised_shadow_config is not None or context.supervised_shadow_error is not None:
+            with runtime_stage("segmentation"):
+                shadow = self._observe_supervised_shadow(inspection, context)
+        else:
+            shadow = self._observe_supervised_shadow(inspection, context)
+        if context.fusion_policy is not None or context.fusion_error is not None:
+            with runtime_stage("fusion"):
+                fused = self._fuse_evidence(inspection, context, evidence, original_boxes, quality_gate_result, shadow)
+        else:
+            fused = self._fuse_evidence(inspection, context, evidence, original_boxes, quality_gate_result, shadow)
+        with runtime_stage("postprocessing"):
+            qc = self._evaluate_hybrid_qc(inspection.fabric_id, context, fused)
+        legacy_decision = decision
+        if qc is not None and qc.applied:
+            decision = FabricDecision(label=qc.label, reason="QC_" + qc.reason)
+        return InspectionResult(
+            evidence=evidence,
+            candidates=tuple(original_boxes),
+            decision=decision,
+            defect_area_ratio=self._box_area_ratio(original_boxes, features.original_width, features.original_height),
+            quality_gate_result=quality_gate_result,
+            # Deliberately after evidence and QC; no consumer in patching/scoring/decision.
+            pattern_period_result=pattern,
+            known_defects_shadow=shadow,
+            defect_evidence=fused,
+            qc_evaluation=qc,
+            legacy_decision=legacy_decision if qc is not None else None,
+        )
 
     def create_placeholder_inspection(self, image: UploadFile, reference_id: str | None = None) -> InspectionCreateResponse:
         reference_context = self._resolve_reference_context(reference_id)

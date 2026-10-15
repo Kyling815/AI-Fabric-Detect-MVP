@@ -1,0 +1,41 @@
+{
+  "calibration_version": "hypothetical_linear_fixture_v1",
+  "world_frame_id": "hypothetical_roll_origin",
+  "transport": {
+    "encoder_id": "simulated_encoder",
+    "mm_per_encoder_count": 0.1,
+    "encoder_origin_count": 1000,
+    "mm_per_line": 0.25,
+    "line_origin_index": 0,
+    "y_origin_mm": 100.0,
+    "travel_direction": 1
+  },
+  "cameras": [
+    {
+      "camera_id": "lane_left",
+      "image_width": 48,
+      "image_height": 32,
+      "coordinate_frame": "oriented_source_pixels",
+      "pixel_convention": "pixel_edges",
+      "x_mm_per_pixel": 0.5,
+      "y_mm_per_pixel": 0.25,
+      "x_origin_mm": 0.0,
+      "y_offset_mm": 2.0,
+      "x_direction": 1,
+      "y_direction": 1
+    },
+    {
+      "camera_id": "lane_right",
+      "image_width": 48,
+      "image_height": 32,
+      "coordinate_frame": "oriented_source_pixels",
+      "pixel_convention": "pixel_edges",
+      "x_mm_per_pixel": 0.5,
+      "y_mm_per_pixel": 0.25,
+      "x_origin_mm": 20.0,
+      "y_offset_mm": 2.0,
+      "x_direction": 1,
+      "y_direction": 1
+    }
+  ]
+}

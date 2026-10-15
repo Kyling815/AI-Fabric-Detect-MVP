@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "phase": 18,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "status": "BLOCKED BY DATA / TRAINED CANDIDATE",
+  "implementation_scope": "GOVERNANCE_SOFTWARE_INFRASTRUCTURE_ONLY",
+  "software_implementation_complete": true,
+  "waiting_for_user_review": true,
+  "production_acceptance_performed": false,
+  "production_candidate_registered": false,
+  "production_candidate_activated": false,
+  "fp16_enabled_or_fallback": false,
+  "phase17_approval_scope_preserved": true,
+  "current_project_preflight": {
+    "schema_version": 1,
+    "phase": 18,
+    "status": "BLOCKED BY DATA / TRAINED CANDIDATE",
+    "accepted": false,
+    "metrics": {
+      "defect_recall": null,
+      "false_negatives": null,
+      "underkill": null,
+      "false_positive_rate": null,
+      "overkill": null,
+      "precision": null,
+      "f1": null,
+      "segmentation_iou": null,
+      "segmentation_dice": null,
+      "unknown_defect_recall": null,
+      "false_alarms_per_100m": null,
+      "missed_defects_per_100m": null,
+      "p50_latency_ms": null,
+      "p95_latency_ms": null,
+      "throughput_images_per_second": null
+    },
+    "per_class_recall": {},
+    "blocking_reasons": [
+      "NO_VERIFIED_TRAINED_PRODUCTION_CANDIDATE",
+      "NO_VALID_FRESH_SOURCE_LOT_CAMERA_DISJOINT_LOCKED_TEST",
+      "NO_APPROVED_ACCEPTANCE_POLICY_OR_CUSTOMER_SLA"
+    ],
+    "manual_activation_required": true,
+    "registry_modified": false,
+    "production_quality_evidence": false,
+    "automatic_activation": false,
+    "scope": "CURRENT_PROJECT_READ_ONLY_PREFLIGHT_NOT_ACCEPTANCE_EVALUATION",
+    "trained_candidate_supplied": false,
+    "fresh_dataset_supplied": false,
+    "model_predictions_generated": false,
+    "historical_images_evaluated": false,
+    "masked_company_rows": {
+      "real": 0,
+      "synthetic": 120
+    },
+    "missing_company_provenance_fields": [
+      "camera_id",
+      "lot_id",
+      "roll_id"
+    ],
+    "registry_fabric_statuses": {
+      "fabric_001": "INACTIVE",
+      "fabric_002": "INACTIVE"
+    },
+    "policy_approved": false,
+    "customer_thresholds_defined": false,
+    "fp32_phase17_scope": "technical/research baseline ONLY; no full-pipeline/quality evidence",
+    "fp16_status": "REJECTED_NO_FALLBACK",
+    "phase17_research_probe_registered": false
+  },
+  "acceptance_metrics": {
+    "defect_recall": null,
+    "false_negatives": null,
+    "underkill": null,
+    "false_positive_rate": null,
+    "overkill": null,
+    "precision": null,
+    "f1": null,
+    "segmentation_iou": null,
+    "segmentation_dice": null,
+    "unknown_defect_recall": null,
+    "false_alarms_per_100m": null,
+    "missed_defects_per_100m": null,
+    "p50_latency_ms": null,
+    "p95_latency_ms": null,
+    "throughput_images_per_second": null
+  },
+  "acceptance_thresholds": null,
+  "production_sla": null,
+  "real_model_quality_evidence": false,
+  "files_created": [
+    "backend/app/core/release_governance.py",
+    "backend/app/services/release_governance.py",
+    "scripts/check_phase18_release.py",
+    "config/release_policy_unapproved_example.json",
+    "tests/release_governance_fixtures.py",
+    "tests/test_release_governance.py",
+    "tests/test_release_governance_integration.py",
+    "docs/implementation/phase_18_release_governance.md",
+    "docs/implementation/phase_18_release_report.json"
+  ],
+  "existing_files_modified": [
+    "scripts/evaluate_fabric_demo.py"
+  ],
+  "modified_existing_file_delta": {
+    "insertions": 5,
+    "deletions": 17,
+    "purpose": "Disable unsafe historical/hard-coded automatic activation, label legacy diagnostic reports as not release approval; preserve non-activation evaluation/inference."
+  },
+  "existing_files_audited": 381,
+  "unrelated_existing_files_unchanged": 380,
+  "existing_files_deleted": 0,
+  "implementation": [
+    "Strict hash-pinned candidate/model/reference/engine/runtime/threshold provenance contracts",
+    "Owner-approved configurable criteria with null/unapproved shipped template; no inferred customer SLA",
+    "Validation then candidate/policy-bound fresh lock and exact-coverage full-hybrid evaluation evidence",
+    "Source/hash/ancestor/lot/roll/camera disjointness vs complete exposure inventory plus known Company history",
+    "Human-verified ground truth, no duplicate locked image bytes, explicit calibrated non-overlapping physical intervals",
+    "Derived event/pixel/per-class/unknown/distance/timing/throughput metric checks with undefined metrics null",
+    "Reports never activate; explicit separate manual request rehashes/recomputes and binds reviewer/candidate/report/registry",
+    "Manual registry CAS/cooperative lock/backup/atomic write/audit, only exercised against TEMP fixtures",
+    "Hard rejection of FP16 and all13 known Phase17 research artifact digests, including renamed probe artifacts",
+    "Legacy activate function and CLI flag disabled before any production writes"
+  ],
+  "metric_definitions": {
+    "defect_recall": "matched defect events / total truth defect events",
+    "false_negatives": "unmatched truth defect event count",
+    "underkill": "unmatched truth events / total truth events",
+    "false_positive_rate": "positive normal inspection units / total normal units",
+    "overkill": "same normal-unit false-positive rate",
+    "precision": "matched defect events / (matched events + false-alarm events)",
+    "f1": "2*matched / (2*matched+false-alarm events+unmatched truth events)",
+    "segmentation_iou": "micro foreground TP/(TP+FP+FN)",
+    "segmentation_dice": "micro foreground 2TP/(2TP+FP+FN)",
+    "unknown_defect_recall": "matched unknown events / truth unknown events",
+    "false_alarms_per_100m": "false alarm events *100 / calibrated non-overlapping inspected meters",
+    "missed_defects_per_100m": "unmatched truth events *100 / calibrated non-overlapping inspected meters",
+    "p50_latency_ms": "numpy linear percentile50 of full-hybrid finite synchronized warmup-excluded samples",
+    "p95_latency_ms": "numpy linear percentile95, same required full-hybrid scope",
+    "throughput_images_per_second": "explicit measured throughput images / wall seconds; protocol declared",
+    "per_class_recall": "one-to-one known event matches / truth events for each candidate foreground class; missing coverage blocks"
+  },
+  "tests": {
+    "phase18_unit_and_integration": {
+      "passed": 113,
+      "warnings": 1,
+      "seconds": 23.53,
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_release_governance.py tests/test_release_governance_integration.py -q",
+      "scope": "Hypothetical metadata/count/stub artifacts in pytest TEMP ONLY; NOT trained model evaluation, real acceptance evidence or production activation"
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1920,
+      "warnings": 1,
+      "seconds": 269.83,
+      "exit_code": 0,
+      "previous_suite_count": 1807,
+      "new_tests": 113,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "frontend_build_ms": 461,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true,
+      "source_frozen_during_final_run": true
+    },
+    "development_run_notes": [
+      {
+        "issue": "Initial artifact pin reader allocated the entire1GiB size cap for tiny files",
+        "resolution": "Size-check same open file and read exact fstat size+1; restarted only the two verified owned test processes",
+        "scope": "New implementation/test performance defect, no protected data changed"
+      },
+      {
+        "failed": 1,
+        "passed": 1912,
+        "warnings": 1,
+        "seconds": 269.75,
+        "failed_test": "test_explicit_manual_cli_uses_only_temp_fixture_registry",
+        "cause": "In-flight suite retained old fixture while a new CLI subprocess loaded stricter engine/recipe path checks. Focused final113-test suite passed; final clean full run required."
+      }
+    ],
+    "compileall": "PASS",
+    "cpu_pip_check": "PASS",
+    "gpu_pip_check": "PASS",
+    "git_diff_check": "PASS",
+    "existing_tests_modified": false,
+    "existing_test_regressions_in_final_run": false,
+    "warning": "Pre-existing FAISS NumPy private namespace deprecation."
+  },
+  "preservation": {
+    "cpu_dependency_freeze_unchanged": true,
+    "gpu_dependencies_changed": false,
+    "driver_version": "610.62",
+    "driver_changed": false,
+    "protected_artifacts_checked": 55,
+    "protected_artifact_mismatches": 0,
+    "original_storage_files_unchanged": 311,
+    "data_files_unchanged": 643,
+    "user_files_unchanged": 10,
+    "torch_cache_files_unchanged": 3,
+    "phase17_research_artifacts_modified": false,
+    "faiss_artifacts_modified": false,
+    "reference_thresholds_modified": false,
+    "production_registry_modified": false,
+    "both_current_fabrics": "INACTIVE",
+    "public_http_api_or_runtime_changed": false,
+    "database_schema_changed": false,
+    "frontend_changed": false
+  },
+  "limitations": [
+    "No trained candidate, verified fresh source/lot/camera-disjoint locked dataset or approved customer criteria/SLA; all actual acceptance metrics null",
+    "Trusted evaluator/imported counts, training/lineage/capture/annotation/custody attestations require independent external verification; no model runner or pixel/event matching implemented here",
+    "No PKI/SSO/RBAC; human reviewer identity and access restrictions rely on trusted operator/OS permissions",
+    "Candidate/policy-bound lock metadata is not a blind evaluation server or universal cross-system test-use ledger; completeness of external history remains a custody obligation",
+    "Known Company history inventory is a deny lower bound, not the full external exposure history",
+    "Current observation contract is class-homogeneous per inspection unit; multi-class evaluator must provide appropriate granular units and valid non-overlapping coverage",
+    "Manual CAS lock is cooperative; legacy builder does not take it, so maintenance window is required",
+    "Manual adapter changes registry pointer/governance metadata only; no full hybrid/GPU production runtime migration, and target entry must be explicitly preprepared with exact provenance",
+    "Fixture happy-path report and TEMP registry activation demonstrate software only; no production candidate was activated"
+  ],
+  "progress_against_requirements": {
+    "title": "Tiến độ so với yêu cầu",
+    "governance_software": "IMPLEMENTED",
+    "all_requested_configurable_metric_checks": "IMPLEMENTED_WITH_NULL_UNAPPROVED_DEFAULTS",
+    "disjoint_fresh_test_gates": "IMPLEMENTED_PROVENANCE_AND_TRUSTED_CUSTODY_CHECKS",
+    "manual_activation_framework": "IMPLEMENTED_TESTED_TEMP_ONLY_NOT_RUN_ON_PRODUCTION",
+    "legacy_bypass_fp16_research_blocks": "IMPLEMENTED",
+    "trained_candidate_and_fresh_real_evidence": "MISSING_BLOCKED",
+    "production_acceptance_and_activation": "NOT_PERFORMED",
+    "next_phase_started": false
+  },
+  "git": {
+    "staged_or_committed": false,
+    "cumulative_tracked_diff": {
+      "files": 11,
+      "insertions": 516,
+      "deletions": 149
+    }
+  },
+  "recommendation": "BLOCKED BY DATA / TRAINED CANDIDATE",
+  "next_actions_for_user": [
+    "Review Phase18 software and keep current references INACTIVE",
+    "Prepare verified real labels/source/lot/roll/camera inventory and separately custodied fresh locked test",
+    "Provide trained/versioned candidate/model/reference/engine/full runtime recipe and legitimate validation/evaluation artifacts",
+    "Owner defines/approves criteria and acceptance scope; evaluator provides genuine full-hybrid measurements",
+    "Only after all gates pass, independent operator may request manual activation during maintenance window"
+  ],
+  "next_phase_started": false,
+  "software_recommendation": "SAFE TO REVIEW SOFTWARE ONLY; actual release BLOCKED BY DATA / TRAINED CANDIDATE"
+}

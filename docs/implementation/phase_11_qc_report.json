@@ -1,0 +1,487 @@
+{
+  "phase": 11,
+  "implemented_date": "2026-10-15",
+  "timezone": "Asia/Bangkok",
+  "status": "WAITING_FOR_USER_REVIEW",
+  "recommendation": "SAFE TO APPROVE",
+  "recommendation_scope": "Software separation, default-OFF compatibility and explicitly opted-in development enforcement only; NOT production QC acceptance.",
+  "next_phase_started": false,
+  "baseline_commit": "530a30b8ee6a2fb05d4df0b14e76c68e10cf3572",
+  "runtime_default": {
+    "enabled": false,
+    "mode": "observe_only",
+    "config_path": ""
+  },
+  "public_http_schema_changed": false,
+  "database_schema_changed": false,
+  "production_registry_modified": false,
+  "production_policy_activated": false,
+  "model_training_performed": false,
+  "real_accuracy_evaluated": false,
+  "tests": {
+    "phase11": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_qc_contracts.py tests/test_qc_decision.py tests/test_qc_legacy_compatibility.py tests/test_qc_integration.py -q",
+      "passed": 158,
+      "warnings": 1,
+      "seconds": 12.59,
+      "by_file": {
+        "contracts": 36,
+        "decision": 38,
+        "legacy_compatibility": 49,
+        "integration": 35
+      }
+    },
+    "full_regression": {
+      "command": ".\\.venv\\Scripts\\python.exe scripts/check_phase0_baseline.py --regression --frontend",
+      "passed": 1181,
+      "warnings": 1,
+      "pytest_seconds": 227.16,
+      "exit_code": 0,
+      "previous_suite_count": 1023,
+      "frontend_build": "PASS",
+      "frontend_modules": 22,
+      "smoke_assertions_passed": 77,
+      "isolated_database_and_storage": true,
+      "existing_cached_backbone_loaded_for_smoke": true
+    },
+    "existing_tests_modified": false,
+    "existing_tests_broken": false,
+    "warning": "Existing FAISS loader uses deprecated NumPy private namespace.",
+    "initial_new_test_failures": "New fixture configured top_k_mean although golden runtime uses max; then new assertions used nonexistent decision_reason/defects HTTP keys and incorrect reason/precedence expectations. Fixed new fixtures/assertions without changing old tests or disabling evidence guards. Removed misleading wrapped engine from gate tests; added exact reasons, complete fusion trace and disjoint mask-count checks.",
+    "compileall": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "modified_existing_files": [
+    ".env.example",
+    "backend/app/ai/classifier.py",
+    "backend/app/ai/fabric_decision.py",
+    "backend/app/core/config.py",
+    "backend/app/core/inspection_contracts.py",
+    "backend/app/services/inspection_service.py"
+  ],
+  "created_files": [
+    "backend/app/core/qc.py",
+    "backend/app/services/qc_decision.py",
+    "config/qc_policy_example.json",
+    "scripts/check_phase11_qc.py",
+    "tests/qc_fixtures.py",
+    "tests/test_qc_contracts.py",
+    "tests/test_qc_decision.py",
+    "tests/test_qc_legacy_compatibility.py",
+    "tests/test_qc_integration.py",
+    "docs/implementation/phase_11_qc_separation.md",
+    "docs/implementation/phase_11_qc_report.json"
+  ],
+  "existing_files_audited": 304,
+  "unrelated_existing_files_unchanged": 298,
+  "protected_artifacts_checked": 55,
+  "protected_artifact_mismatches": 0,
+  "protected_scope_fingerprints": [
+    {
+      "scope": "storage",
+      "file_count": 311,
+      "sha256": "51EE8182A46E03A03B22FF054B226023B499DDD4CA85CB691F4EF926F84486F3"
+    },
+    {
+      "scope": "data",
+      "file_count": 643,
+      "sha256": "A1D03384692ED879955842CFCCF2ECB414858CBC019E442A80A4CFBE4861EAF5"
+    },
+    {
+      "scope": "user_files",
+      "file_count": 10,
+      "sha256": "4B8667C67D06FADC599748A0836AF648F0EE61E3A1268F5DF430FC03AFC04639"
+    },
+    {
+      "scope": "torch_cache",
+      "file_count": 3,
+      "sha256": "4DDF9142D197A21D69F6125BB61EE77E261C19F3158834727F11E918B0FAD7DC"
+    }
+  ],
+  "git": {
+    "staged_changes": false,
+    "cumulative_tracked_diff": {
+      "files": 7,
+      "insertions": 432,
+      "deletions": 101
+    },
+    "note": "Includes prior phases and preexisting user binary change; inspection_contracts.py is preexisting untracked, so not in tracked diffstat."
+  },
+  "demo": {
+    "phase": 11,
+    "status": "HYPOTHETICAL_SOFTWARE_CHECK_ONLY",
+    "case_count": 9,
+    "cases": [
+      {
+        "case": "known_allowable",
+        "expected": "GOOD",
+        "decision": {
+          "label": "GOOD",
+          "reason": "KNOWN_SEVERITY_ALLOWED",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "KNOWN_DEFECT",
+          "assessments": [
+            {
+              "class_name": "defect",
+              "area_fraction": 0.01953125,
+              "outcome": "allowed",
+              "allow_max_fraction": 0.05,
+              "reject_min_fraction": 0.2
+            }
+          ],
+          "issues": [],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "evidence_completeness_and_policy_gates_passed",
+            "known_severity_assessed_in_model_grid_units",
+            "known_severity_allowed"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "known_rejectable",
+        "expected": "BAD",
+        "decision": {
+          "label": "BAD",
+          "reason": "KNOWN_SEVERITY_REJECT",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "KNOWN_DEFECT",
+          "assessments": [
+            {
+              "class_name": "defect",
+              "area_fraction": 0.5,
+              "outcome": "reject",
+              "allow_max_fraction": 0.05,
+              "reject_min_fraction": 0.2
+            }
+          ],
+          "issues": [],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "evidence_completeness_and_policy_gates_passed",
+            "known_severity_assessed_in_model_grid_units",
+            "known_severity_reject"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "known_borderline",
+        "expected": "NEEDS_REVIEW",
+        "decision": {
+          "label": "NEEDS_REVIEW",
+          "reason": "KNOWN_SEVERITY_BORDERLINE_OR_UNMAPPED",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "KNOWN_DEFECT",
+          "assessments": [
+            {
+              "class_name": "defect",
+              "area_fraction": 0.125,
+              "outcome": "review",
+              "allow_max_fraction": 0.05,
+              "reject_min_fraction": 0.2
+            }
+          ],
+          "issues": [
+            "unapproved_class_allowance"
+          ],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "evidence_completeness_and_policy_gates_passed",
+            "known_severity_assessed_in_model_grid_units",
+            "known_severity_borderline_or_unmapped"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "unknown_high",
+        "expected": "BAD",
+        "decision": {
+          "label": "BAD",
+          "reason": "UNKNOWN_HIGH_ANOMALY",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "UNKNOWN_DEFECT",
+          "assessments": [],
+          "issues": [],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "evidence_completeness_and_policy_gates_passed",
+            "known_severity_assessed_in_model_grid_units",
+            "unknown_high_anomaly"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "anomaly_borderline",
+        "expected": "NEEDS_REVIEW",
+        "decision": {
+          "label": "NEEDS_REVIEW",
+          "reason": "FUSED_EVIDENCE_REQUIRES_REVIEW",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "NEEDS_REVIEW",
+          "assessments": [],
+          "issues": [
+            "fused_review"
+          ],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "fused_evidence_requires_review"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "complete_normal",
+        "expected": "GOOD",
+        "decision": {
+          "label": "GOOD",
+          "reason": "COMPLETE_NORMAL_EVIDENCE",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "NORMAL",
+          "assessments": [],
+          "issues": [],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "evidence_completeness_and_policy_gates_passed",
+            "known_severity_assessed_in_model_grid_units",
+            "complete_normal_evidence"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "no_evidence",
+        "expected": "NEEDS_REVIEW",
+        "decision": {
+          "label": "NEEDS_REVIEW",
+          "reason": "NO_EVIDENCE",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": null,
+          "assessments": [],
+          "issues": [
+            "no_evidence"
+          ],
+          "rule_trace": [
+            "no_evidence"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "missing_branch",
+        "expected": "NEEDS_REVIEW",
+        "decision": {
+          "label": "NEEDS_REVIEW",
+          "reason": "FUSED_EVIDENCE_REQUIRES_REVIEW",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "NEEDS_REVIEW",
+          "assessments": [],
+          "issues": [
+            "supervised_missing"
+          ],
+          "rule_trace": [
+            "rule_input_validated",
+            "capture_and_fabric_verified",
+            "fused_evidence_requires_review"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      },
+      {
+        "case": "invalid_capture",
+        "expected": "NEEDS_REVIEW",
+        "decision": {
+          "label": "NEEDS_REVIEW",
+          "reason": "INVALID_CAPTURE",
+          "policy": {
+            "policy_version": "hypothetical_qc_demo_v1",
+            "allowed_fabric_ids": [
+              "hypothetical_fabric"
+            ],
+            "known_rules": [
+              {
+                "class_name": "defect",
+                "unit": "model_grid_area_fraction",
+                "allow_max_fraction": 0.05,
+                "reject_min_fraction": 0.2
+              }
+            ],
+            "unknown_high_action": "BAD",
+            "allow_synthetic_evidence": true,
+            "allow_uncalibrated_supervised": true
+          },
+          "evidence_kind": "INVALID_CAPTURE",
+          "assessments": [],
+          "issues": [
+            "invalid_capture"
+          ],
+          "rule_trace": [
+            "rule_input_validated",
+            "invalid_capture"
+          ],
+          "runtime_mode": "observe_only",
+          "applied": false
+        }
+      }
+    ],
+    "business_thresholds_calibrated": false,
+    "production_policy_activated": false,
+    "models_trained_or_loaded": false,
+    "writes_performed": false,
+    "note": "Illustrative model-grid class area rules, NOT customer SLA, physical severity or real-data accuracy. Default runtime remains OFF/observe-only."
+  },
+  "limitations": [
+    "Model-grid area fraction is not component severity, source-pixel area or physical mm2; Phase 12 not implemented.",
+    "Policy thresholds in tests/demo are hypothetical, not customer-approved tolerances.",
+    "Default provenance/calibration guards reject synthetic or uncalibrated supervised evidence; current supervised runtime is not production-qualified.",
+    "Known-defect QC can change label while HTTP boxes/count/area/annotated image remain anomaly-only.",
+    "Audit diagnostics are best-effort logs, not a durable database audit record.",
+    "Fusion capture path hash is invocation correlation, not content/provenance proof. Pure caller-declared validity is only a trusted-input demonstration.",
+    "Explicit enforcement can increase reviews on configuration/worker/evidence failure; OFF/observe-only intentionally retain legacy decisions, including any legacy limitations."
+  ]
+}

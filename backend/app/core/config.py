@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -52,6 +53,18 @@ class Settings(BaseSettings):
     patch_stride: int = 48
     batch_size: int = 16
     max_upload_size_bytes: int = Field(default=25 * 1024 * 1024, ge=1)
+    quality_gate_enabled: bool = False
+    quality_gate_config_path: str = ""
+    pattern_estimator_enabled: bool = False
+    pattern_estimator_config_path: str = ""
+    supervised_shadow_enabled: bool = False
+    supervised_shadow_config_path: str = ""
+    fusion_enabled: bool = False
+    fusion_config_path: str = ""
+    hybrid_qc_enabled: bool = False
+    hybrid_qc_mode: Literal["observe_only", "enforce"] = "observe_only"
+    hybrid_qc_config_path: str = ""
+    runtime_profiling_enabled: bool = False
     preprocessing_version: str = "v1"
     preprocessing_config_path: str = ""
     reference_max_images: int = 25
